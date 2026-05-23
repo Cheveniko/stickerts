@@ -118,6 +118,26 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+@theme {
+  --breakpoint-xs: 28rem;
+}
+
+@layer utilities {
+  .container {
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+
+  @media (width >= 85rem) {
+    .container {
+      max-width: 1350px;
+    }
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
