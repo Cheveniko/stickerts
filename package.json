@@ -48,6 +48,8 @@
     "vite": "^8.0.7"
   },
   "dependencies": {
+    "@auth/core": "0.37.0",
+    "@convex-dev/auth": "^0.0.92",
     "convex": "^1.39.1",
     "convex-svelte": "^0.0.12"
   }

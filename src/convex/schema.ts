@@ -1,3 +1,4 @@
+import { authTables } from "@convex-dev/auth/server";
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
@@ -17,15 +18,45 @@ const listingStatusValidator = v.union(
   v.literal("removed"),
 );
 
+const sellerStatusValidator = v.union(
+  v.literal("active"),
+  v.literal("paused"),
+  v.literal("blocked"),
+);
+
 export default defineSchema({
+  ...authTables,
+
   users: defineTable({
-    tokenIdentifier: v.string(),
     name: v.optional(v.string()),
+    image: v.optional(v.string()),
     email: v.optional(v.string()),
-    isSeller: v.boolean(),
-    sellerActivatedAt: v.optional(v.number()),
-    sellerPaymentId: v.optional(v.string()),
-  }).index("by_tokenIdentifier", ["tokenIdentifier"]),
+    emailVerificationTime: v.optional(v.number()),
+    phone: v.optional(v.string()),
+    phoneVerificationTime: v.optional(v.number()),
+    isAnonymous: v.optional(v.boolean()),
+  })
+    .index("email", ["email"])
+    .index("phone", ["phone"]),
+
+  sellers: defineTable({
+    userId: v.id("users"),
+    status: sellerStatusValidator,
+    activatedAt: v.number(),
+    paymentId: v.optional(v.string()),
+    displayName: v.string(),
+    slug: v.string(),
+    avatarUrl: v.optional(v.string()),
+    bio: v.optional(v.string()),
+    totalSalesCount: v.number(),
+    totalStickersSold: v.number(),
+    totalRevenueCents: v.number(),
+    activeListingsCount: v.number(),
+    lastSoldAt: v.optional(v.number()),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_slug", ["slug"])
+    .index("by_status", ["status"]),
 
   countries: defineTable({
     code: v.string(),
@@ -38,12 +69,11 @@ export default defineSchema({
     .index("by_name", ["name"]),
 
   cities: defineTable({
-    countryId: v.id("countries"),
     countryCode: v.string(),
     name: v.string(),
     slug: v.string(),
   })
-    .index("by_countryId_and_name", ["countryId", "name"])
+    .index("by_countryCode_and_name", ["countryCode", "name"])
     .index("by_countryCode_and_slug", ["countryCode", "slug"]),
 
   stickers: defineTable({
@@ -65,7 +95,6 @@ export default defineSchema({
   listings: defineTable({
     stickerId: v.id("stickers"),
     sellerId: v.id("sellers"),
-    countryId: v.id("countries"),
     countryCode: v.string(),
     cityId: v.id("cities"),
     cityName: v.string(),
@@ -79,10 +108,10 @@ export default defineSchema({
   })
     .index("by_status", ["status"])
     .index("by_stickerId_and_status", ["stickerId", "status"])
-    .index("by_countryId_and_status", ["countryId", "status"])
+    .index("by_countryCode_and_status", ["countryCode", "status"])
     .index("by_cityId_and_status", ["cityId", "status"])
-    .index("by_countryId_and_status_and_stickerId", [
-      "countryId",
+    .index("by_countryCode_and_status_and_stickerId", [
+      "countryCode",
       "status",
       "stickerId",
     ])
@@ -97,7 +126,7 @@ export default defineSchema({
     listingId: v.id("listings"),
     stickerId: v.id("stickers"),
     stickerCode: v.string(),
-    sellerId: v.id("users"),
+    sellerId: v.id("sellers"),
     quantity: v.number(),
     unitPriceCents: v.number(),
     totalPriceCents: v.number(),

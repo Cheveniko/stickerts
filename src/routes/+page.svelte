@@ -8,10 +8,10 @@
     () => ({}),
   );
 
-  $inspect(listingsQuery);
+  $inspect(listingsQuery.data);
 </script>
 
-<main class="container pt-34">
+<main class="container space-y-6 pt-34">
   <h2 class="text-xl font-semibold">{m.home_heading()}</h2>
 
   {#if listingsQuery.isLoading}

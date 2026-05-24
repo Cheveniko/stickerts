@@ -89,14 +89,6 @@ export const locationSeed: LocationSeedEntry[] = [
     cities: ["Barranquilla", "Bogotá", "Cali", "Medellín"],
   },
   {
-    code: "CR",
-    name: "Costa Rica",
-    currency: "CRC",
-    currencySymbol: "₡",
-    flagEmoji: "🇨🇷",
-    cities: ["Alajuela", "Cartago", "San José"],
-  },
-  {
     code: "ES",
     name: "España",
     currency: "EUR",
