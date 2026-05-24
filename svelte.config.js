@@ -7,7 +7,10 @@ const config = {
     runes: ({ filename }) =>
       filename.split(/[/\\]/).includes("node_modules") ? undefined : true,
   },
-  kit: { adapter: adapter() },
+  kit: {
+    adapter: adapter(),
+    alias: { $convex: "src/convex" },
+  },
 };
 
 export default config;
