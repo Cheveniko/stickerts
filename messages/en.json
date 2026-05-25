@@ -4,5 +4,13 @@
   "nav_how_it_works": "How it works",
   "nav_sell": "Sell",
   "nav_language_label": "Language",
-  "home_heading": "Stickers for sale"
+  "home_heading": "Stickers for sale",
+  "listing_buy": "Buy",
+  "listing_image_alt": "Sticker {name}",
+  "listing_quantity_short": "{count} pcs.",
+  "footer_terms": "Terms of Service",
+  "footer_privacy": "Privacy Policy",
+  "footer_theme_light": "Light",
+  "footer_theme_dark": "Dark",
+  "footer_theme_system": "System"
 }

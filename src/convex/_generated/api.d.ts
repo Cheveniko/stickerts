@@ -13,6 +13,8 @@ import type * as http from "../http.js";
 import type * as listings from "../listings.js";
 import type * as locationSeed from "../locationSeed.js";
 import type * as locations from "../locations.js";
+import type * as purchaseInquiries from "../purchaseInquiries.js";
+import type * as resend from "../resend.js";
 import type * as seed from "../seed.js";
 import type * as stickers from "../stickers.js";
 
@@ -28,6 +30,8 @@ declare const fullApi: ApiFromModules<{
   listings: typeof listings;
   locationSeed: typeof locationSeed;
   locations: typeof locations;
+  purchaseInquiries: typeof purchaseInquiries;
+  resend: typeof resend;
   seed: typeof seed;
   stickers: typeof stickers;
 }>;

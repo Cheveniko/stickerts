@@ -122,6 +122,27 @@ export default defineSchema({
     ])
     .index("by_sellerId_and_status", ["sellerId", "status"]),
 
+  purchaseInquiries: defineTable({
+    listingId: v.id("listings"),
+    sellerId: v.id("sellers"),
+    stickerId: v.id("stickers"),
+    anonymousClientId: v.string(),
+    message: v.string(),
+    createdAt: v.number(),
+  })
+    .index("by_createdAt", ["createdAt"])
+    .index("by_listingId_and_createdAt", ["listingId", "createdAt"])
+    .index("by_sellerId_and_createdAt", ["sellerId", "createdAt"])
+    .index("by_anonymousClientId_and_createdAt", [
+      "anonymousClientId",
+      "createdAt",
+    ])
+    .index("by_anonymousClientId_and_listingId_and_createdAt", [
+      "anonymousClientId",
+      "listingId",
+      "createdAt",
+    ]),
+
   sales: defineTable({
     listingId: v.id("listings"),
     stickerId: v.id("stickers"),

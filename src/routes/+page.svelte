@@ -2,30 +2,30 @@
   import * as m from "$lib/paraglide/messages";
   import { api } from "$convex/_generated/api";
   import { useQuery } from "convex-svelte";
+  import ListingsSkeleton from "$lib/components/skeletons/listings-skeleton.svelte";
+  import ListingsGrid from "$lib/components/listings-grid.svelte";
 
   const listingsQuery = useQuery(
     api.listings.getActiveListingsWithCountryAndSticker,
     () => ({}),
   );
-
-  $inspect(listingsQuery.data);
 </script>
 
-<main class="container space-y-6 pt-34">
+<main class="container space-y-6 pt-28 pb-16 md:pt-36">
   <h2 class="text-xl font-semibold">{m.home_heading()}</h2>
 
   {#if listingsQuery.isLoading}
-    <p>Cargando listings activos...</p>
+    <ListingsSkeleton />
   {:else if listingsQuery.error}
-    <p>Error cargando listings activos: {listingsQuery.error.toString()}</p>
+    <p>Error</p>
+  {:else if listingsQuery.data?.length === 0}
+    <div class="flex flex-col items-center justify-center py-24">
+      <span class="text-4xl">🔍</span>
+      <p class="mt-3 text-sm text-muted-foreground">
+        No hay cromos disponibles.
+      </p>
+    </div>
   {:else}
-    <ul>
-      {#each listingsQuery.data as listing (listing._id)}
-        <li>
-          {listing.sticker?.code ?? "Cromo desconocido"} · {listing.cityName} · {listing
-            .country?.flagEmoji ?? "sin bandera"} · {listing.priceCents}
-        </li>
-      {/each}
-    </ul>
+    <ListingsGrid listings={listingsQuery.data} />
   {/if}
 </main>

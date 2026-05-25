@@ -1,21 +1,40 @@
 import { query, type QueryCtx } from "./_generated/server";
 import type { Doc } from "./_generated/dataModel";
 
-type Listing = Doc<"listings">;
+export type Listing = Doc<"listings">;
+export type Country = Doc<"countries">;
+export type Sticker = Doc<"stickers">;
+export type Seller = Doc<"sellers">;
+export type User = Doc<"users">;
 
-async function enrichListing(ctx: QueryCtx, listing: Listing) {
-  const [country, sticker] = await Promise.all([
+export type ListingWithRelations = Listing & {
+  country: Country;
+  sticker: Sticker;
+  seller: Seller;
+};
+
+async function enrichListing(
+  ctx: QueryCtx,
+  listing: Listing,
+): Promise<ListingWithRelations> {
+  const [country, sticker, seller] = await Promise.all([
     ctx.db
       .query("countries")
       .withIndex("by_code", (q) => q.eq("code", listing.countryCode))
       .unique(),
     ctx.db.get(listing.stickerId),
+    ctx.db.get(listing.sellerId),
   ]);
+
+  if (!country || !sticker || !seller) {
+    throw new Error(`Listing ${listing._id} is missing required relations`);
+  }
 
   return {
     ...listing,
     country,
     sticker,
+    seller,
   };
 }
 
@@ -26,8 +45,8 @@ export const getActiveListingsWithCountryAndSticker = query({
       .query("listings")
       .withIndex("by_status", (q) => q.eq("status", "active"))
       .order("desc")
-      .take(50);
+      .collect();
 
-    return await Promise.all(listings.map((l) => enrichListing(ctx, l)));
+    return Promise.all(listings.map((listing) => enrichListing(ctx, listing)));
   },
 });

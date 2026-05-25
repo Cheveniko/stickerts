@@ -2,8 +2,11 @@
   import { Search } from "@lucide/svelte";
   import LanguageSwitcher from "$lib/components/language-switcher.svelte";
   import { Button } from "$lib/components/ui/button";
+  import LoginModal from "$lib/components/login-modal.svelte";
   import * as m from "$lib/paraglide/messages";
   import { cn } from "$lib/utils";
+
+  let loginOpen = $state(false);
 </script>
 
 <header
@@ -27,6 +30,8 @@
   <div class="flex shrink-0 items-center gap-2 md:gap-3">
     <span class="text-sm text-muted-foreground">{m.nav_how_it_works()}</span>
     <LanguageSwitcher />
-    <Button>{m.nav_sell()}</Button>
+    <Button onclick={() => (loginOpen = true)}>{m.nav_sell()}</Button>
   </div>
 </header>
+
+<LoginModal bind:open={loginOpen} />

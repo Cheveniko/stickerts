@@ -3,7 +3,9 @@
   import { PUBLIC_CONVEX_URL } from "$env/static/public";
   import { setupConvexAuth } from "$lib/auth";
   import favicon from "$lib/assets/favicon.svg";
+  import { ModeWatcher } from "mode-watcher";
   import Navbar from "$lib/components/navbar.svelte";
+  import Footer from "$lib/components/footer.svelte";
 
   let { children, data } = $props();
 
@@ -14,5 +16,11 @@
 </script>
 
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
-<Navbar />
-{@render children()}
+<ModeWatcher defaultMode="system" />
+<div class="flex min-h-dvh flex-col">
+  <Navbar />
+  <main class="flex-1">
+    {@render children()}
+  </main>
+  <Footer />
+</div>
