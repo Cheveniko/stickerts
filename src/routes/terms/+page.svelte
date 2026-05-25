@@ -46,12 +46,11 @@
   ];
 </script>
 
-<main class="container pt-28 md:pt-36 pb-16">
-  <div class="max-w-3xl mx-auto">
-    <!-- Page Header -->
+<main class="container pt-28 pb-16 md:pt-36">
+  <div class="mx-auto max-w-3xl">
     <div class="mb-8 space-y-3">
       <Badge variant="outline">Last updated: May 2026</Badge>
-      <h1 class="text-3xl md:text-4xl font-bold">Terms and Conditions</h1>
+      <h1 class="text-3xl font-bold md:text-4xl">Terms and Conditions</h1>
       <p class="text-sm text-muted-foreground">
         Please read these terms carefully before using Stickerts. They govern
         your access to and use of our platform and services.
@@ -59,14 +58,15 @@
       <Separator class="mt-6" />
     </div>
 
-    <!-- Content Card -->
-    <div class="rounded-4xl bg-card shadow-md ring-1 ring-foreground/5 p-8 md:p-10">
+    <div
+      class="rounded-4xl bg-card p-8 shadow-md ring-1 ring-foreground/5 md:p-10"
+    >
       {#each sections as section (section.number)}
         <div class="space-y-2">
           <h2 class="text-base font-semibold">
             {section.number}. {section.title}
           </h2>
-          <p class="text-sm text-muted-foreground leading-relaxed">
+          <p class="text-sm leading-relaxed text-muted-foreground">
             {section.body}
           </p>
         </div>
