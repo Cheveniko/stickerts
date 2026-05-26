@@ -1,6 +1,6 @@
 <script lang="ts">
   import { page } from "$app/state";
-  import { useAuth } from "$lib/auth";
+  import { useAuth } from "$lib/hooks/useAuth.svelte";
   import { fade, fly } from "svelte/transition";
   import { cubicOut } from "svelte/easing";
   import { Input } from "$lib/components/ui/input/index.js";
@@ -113,7 +113,7 @@
                 Regístrate para empezar a vender
               </h2>
               <p class="text-sm text-muted-foreground">
-                Ingresa tu correo y te enviaremos un enlace mágico para entrar.
+                Ingresa tu correo y recibirás un enlace para entrar.
               </p>
             </div>
             <button
@@ -163,7 +163,7 @@
                 disabled={!email.trim() || submitting}
                 class="duration-150 hover:bg-primary hover:brightness-105 active:scale-[0.96]"
               >
-                {submitting ? "Enviando..." : "Continuar"}
+                {submitting ? "Enviando" : "Continuar"}
               </Button>
             </div>
           </form>

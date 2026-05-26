@@ -2,8 +2,11 @@ import { internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
 import { action, internalMutation, internalQuery } from "./_generated/server";
 import { v } from "convex/values";
-import type { Listing, Seller, Sticker, User } from "./listings";
+import type { Listing } from "./listings";
 import { resend, RESEND_NO_REPLY_FROM } from "./resend";
+import type { User } from "./users";
+import type { Seller } from "./sellers";
+import type { Sticker } from "./stickers";
 
 const LISTING_INQUIRY_COOLDOWN_MS = 24 * 60 * 60 * 1000;
 const CLIENT_WINDOW_MS = 60 * 60 * 1000;

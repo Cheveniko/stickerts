@@ -62,3 +62,7 @@ export function formatMoney({
 export function formatCityName(cityName: string, flagEmoji?: string) {
   return flagEmoji ? `${flagEmoji} ${cityName}` : cityName;
 }
+
+export function getInitial(name: string) {
+  return name.trim()[0].toUpperCase();
+}

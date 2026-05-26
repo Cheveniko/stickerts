@@ -27,20 +27,36 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
     }),
   ],
   callbacks: {
-    async afterUserCreatedOrUpdated(ctx, { userId }) {
-      const user = await ctx.db.get(userId);
-      if (!user?.email || user.name?.trim()) {
-        return;
+    async createOrUpdateUser(ctx, { existingUserId, profile }) {
+      const email = profile.email?.trim();
+      if (!email) {
+        throw new Error("Auth provider did not return an email.");
       }
 
-      const derivedName = getDefaultNameFromEmail(user.email);
+      const derivedName = getDefaultNameFromEmail(email);
       if (!derivedName) {
-        return;
+        throw new Error("Auth provider returned an invalid email.");
       }
 
-      await ctx.db.patch(userId, {
-        name: derivedName,
-      });
+      const existingUser = existingUserId
+        ? await ctx.db.get(existingUserId)
+        : null;
+
+      const userFields = {
+        email,
+        name: existingUser?.name?.trim() || derivedName,
+        ...(profile.emailVerified ? { emailVerificationTime: Date.now() } : {}),
+        ...(typeof profile.image === "string" && profile.image.trim()
+          ? { image: profile.image }
+          : {}),
+      };
+
+      if (existingUser) {
+        await ctx.db.patch(existingUser._id, userFields);
+        return existingUser._id;
+      }
+
+      return await ctx.db.insert("users", userFields);
     },
   },
 });

@@ -5,7 +5,7 @@ import { getContext, setContext } from "svelte";
 import { ConvexClient, type ConvexClientOptions } from "convex/browser";
 import { setConvexClientContext } from "convex-svelte";
 import type { Value } from "convex/values";
-import type { ConvexAuthServerState } from "./constants";
+import type { ConvexAuthServerState } from "$lib/auth/constants";
 
 const AUTH_CONTEXT = Symbol("convex-auth");
 
@@ -109,9 +109,8 @@ export function setupConvexAuth({
     );
 
     tokenOverride = result.tokens?.token ?? null;
-    registerAuth();
 
-    return token;
+    return result.tokens?.token ?? null;
   }
 
   async function signIn(

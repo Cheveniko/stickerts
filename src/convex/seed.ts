@@ -344,6 +344,7 @@ async function upsertSeedSeller(
   ctx: MutationCtx,
   seller: SeedSeller,
   userId: Id<"users">,
+  defaultCityId: Id<"cities"> | undefined,
   now: number,
 ): Promise<{ sellerId: Id<"sellers">; created: boolean }> {
   const existingSeller = await ctx.db
@@ -355,6 +356,7 @@ async function upsertSeedSeller(
     userId,
     status: "active" as const,
     activatedAt: existingSeller?.activatedAt ?? now,
+    defaultCityId: defaultCityId ?? existingSeller?.defaultCityId,
     displayName: seller.displayName,
     slug: seller.slug,
     avatarUrl: seller.avatarUrl,
@@ -439,6 +441,25 @@ export const seedListings = internalMutation({
     const cityByLocation = new Map(
       cities.map((city) => [`${city.countryCode}:${city.slug}`, city]),
     );
+    const defaultCityIdBySellerSlug = new Map<string, Id<"cities">>();
+
+    for (const listingSeed of seedListingEntries) {
+      if (defaultCityIdBySellerSlug.has(listingSeed.sellerSlug)) {
+        continue;
+      }
+
+      const city = cityByLocation.get(
+        `${listingSeed.countryCode}:${listingSeed.citySlug}`,
+      );
+
+      if (!city) {
+        throw new Error(
+          `Missing city ${listingSeed.citySlug} for country ${listingSeed.countryCode}.`,
+        );
+      }
+
+      defaultCityIdBySellerSlug.set(listingSeed.sellerSlug, city._id);
+    }
 
     let usersCreated = 0;
     let usersUpdated = 0;
@@ -460,6 +481,7 @@ export const seedListings = internalMutation({
         ctx,
         seller,
         userResult.userId,
+        defaultCityIdBySellerSlug.get(seller.slug),
         now,
       );
 

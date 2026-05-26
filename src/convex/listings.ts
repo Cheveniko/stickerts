@@ -1,11 +1,10 @@
 import { query, type QueryCtx } from "./_generated/server";
 import type { Doc } from "./_generated/dataModel";
+import type { Sticker } from "./stickers";
+import type { Country } from "./countries";
+import type { Seller } from "./sellers";
 
 export type Listing = Doc<"listings">;
-export type Country = Doc<"countries">;
-export type Sticker = Doc<"stickers">;
-export type Seller = Doc<"sellers">;
-export type User = Doc<"users">;
 
 export type ListingWithRelations = Listing & {
   country: Country;

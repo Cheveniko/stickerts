@@ -28,9 +28,9 @@ export default defineSchema({
   ...authTables,
 
   users: defineTable({
-    name: v.optional(v.string()),
+    name: v.string(),
     image: v.optional(v.string()),
-    email: v.optional(v.string()),
+    email: v.string(),
     emailVerificationTime: v.optional(v.number()),
     phone: v.optional(v.string()),
     phoneVerificationTime: v.optional(v.number()),
@@ -43,6 +43,7 @@ export default defineSchema({
     userId: v.id("users"),
     status: sellerStatusValidator,
     activatedAt: v.number(),
+    defaultCityId: v.optional(v.id("cities")),
     paymentId: v.optional(v.string()),
     displayName: v.string(),
     slug: v.string(),

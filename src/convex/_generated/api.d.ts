@@ -9,14 +9,17 @@
  */
 
 import type * as auth from "../auth.js";
+import type * as cities from "../cities.js";
+import type * as countries from "../countries.js";
 import type * as http from "../http.js";
 import type * as listings from "../listings.js";
 import type * as locationSeed from "../locationSeed.js";
-import type * as locations from "../locations.js";
 import type * as purchaseInquiries from "../purchaseInquiries.js";
 import type * as resend from "../resend.js";
 import type * as seed from "../seed.js";
+import type * as sellers from "../sellers.js";
 import type * as stickers from "../stickers.js";
+import type * as users from "../users.js";
 
 import type {
   ApiFromModules,
@@ -26,14 +29,17 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
+  cities: typeof cities;
+  countries: typeof countries;
   http: typeof http;
   listings: typeof listings;
   locationSeed: typeof locationSeed;
-  locations: typeof locations;
   purchaseInquiries: typeof purchaseInquiries;
   resend: typeof resend;
   seed: typeof seed;
+  sellers: typeof sellers;
   stickers: typeof stickers;
+  users: typeof users;
 }>;
 
 /**

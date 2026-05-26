@@ -1,5 +1,6 @@
 import {
   json,
+  redirect,
   type Cookies,
   type Handle,
   type RequestEvent,
@@ -12,7 +13,7 @@ import {
   AUTH_TOKEN_COOKIE,
   AUTH_VERIFIER_COOKIE,
   type ConvexAuthServerState,
-} from "./constants";
+} from "$lib/auth/constants";
 
 const authCookieOptions = {
   path: "/",
@@ -177,17 +178,12 @@ async function handleMagicLinkCode(event: RequestEvent) {
 
     setAuthCookies(event.cookies, result.tokens ?? null);
     clearVerifierCookie(event.cookies);
-  } catch {
-    setAuthCookies(event.cookies, null);
+  } catch (error) {
+    console.error("[auth] Failed to exchange magic link code", error);
     clearVerifierCookie(event.cookies);
   }
 
-  return new Response(null, {
-    status: 303,
-    headers: {
-      Location: cleanUrl.toString(),
-    },
-  });
+  throw redirect(303, cleanUrl.toString());
 }
 
 export function getAuthState(cookies: Cookies): ConvexAuthServerState {
@@ -205,11 +201,7 @@ export const handleAuth: Handle = async ({ event, resolve }) => {
     return await proxyAuthAction(event);
   }
 
-  const magicLinkResponse = await handleMagicLinkCode(event);
-
-  if (magicLinkResponse) {
-    return magicLinkResponse;
-  }
+  await handleMagicLinkCode(event);
 
   return await resolve(event);
 };
