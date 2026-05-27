@@ -97,7 +97,9 @@ function replaceFileExtension(fileName: string, extension: string) {
 export async function processListingImage(
   file: File,
 ): Promise<ProcessedListingImage> {
-  if (!LISTING_IMAGE_ACCEPTED_TYPES.includes(file.type as ListingImageContentType)) {
+  if (
+    !LISTING_IMAGE_ACCEPTED_TYPES.includes(file.type as ListingImageContentType)
+  ) {
     throw new Error("Solo aceptamos imagenes JPG o PNG.");
   }
 
