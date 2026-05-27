@@ -1,8 +1,8 @@
 import stickersJson from "../lib/assets/stickers.json";
+import { locationSeed, toLocationSlug } from "../lib/location-data";
 
 import type { Doc, Id } from "./_generated/dataModel";
 import { internalMutation, type MutationCtx } from "./_generated/server";
-import { locationSeed } from "./locationSeed";
 
 const listingStatuses = ["active", "paused", "sold_out", "removed"] as const;
 
@@ -28,14 +28,13 @@ type StickerSeedEntry = {
 type SeedSeller = {
   email: string;
   name: string;
-  displayName: string;
-  slug: string;
+  username: string;
   avatarUrl: string;
   bio: string;
 };
 
 type SeedListing = {
-  sellerSlug: string;
+  sellerUsername: string;
   countryCode: string;
   citySlug: string;
   priceCents: number;
@@ -43,8 +42,6 @@ type SeedListing = {
 };
 
 type SeedLocationsResult = {
-  countriesCreated: number;
-  countriesUpdated: number;
   citiesCreated: number;
   citiesUpdated: number;
 };
@@ -82,24 +79,21 @@ const seedSellers: SeedSeller[] = [
   {
     email: "ana@stickerts.dev",
     name: "Ana Perez",
-    displayName: "Ana Perez",
-    slug: "ana-perez",
+    username: "ana-perez",
     avatarUrl: "https://placehold.co/128x128/png?text=AP",
     bio: "Coleccionista enfocada en cambios rapidos y envios seguros.",
   },
   {
     email: "diego@stickerts.dev",
     name: "Diego Mora",
-    displayName: "Diego Mora",
-    slug: "diego-mora",
+    username: "diego-mora",
     avatarUrl: "https://placehold.co/128x128/png?text=DM",
     bio: "Vendedor activo con cromos repetidos en excelente estado.",
   },
   {
     email: "lucia@stickerts.dev",
     name: "Lucia Vega",
-    displayName: "Lucia Vega",
-    slug: "lucia-vega",
+    username: "lucia-vega",
     avatarUrl: "https://placehold.co/128x128/png?text=LV",
     bio: "Intercambios constantes para completar albumes rapido.",
   },
@@ -107,70 +101,70 @@ const seedSellers: SeedSeller[] = [
 
 const seedListingEntries: SeedListing[] = [
   {
-    sellerSlug: "ana-perez",
+    sellerUsername: "ana-perez",
     countryCode: "EC",
     citySlug: "quito",
     priceCents: 125,
     quantityAvailable: 3,
   },
   {
-    sellerSlug: "diego-mora",
+    sellerUsername: "diego-mora",
     countryCode: "AR",
     citySlug: "buenos-aires",
     priceCents: 140,
     quantityAvailable: 2,
   },
   {
-    sellerSlug: "lucia-vega",
+    sellerUsername: "lucia-vega",
     countryCode: "BR",
     citySlug: "sao-paulo",
     priceCents: 150,
     quantityAvailable: 4,
   },
   {
-    sellerSlug: "ana-perez",
+    sellerUsername: "ana-perez",
     countryCode: "CL",
     citySlug: "santiago",
     priceCents: 160,
     quantityAvailable: 1,
   },
   {
-    sellerSlug: "diego-mora",
+    sellerUsername: "diego-mora",
     countryCode: "CO",
     citySlug: "bogota",
     priceCents: 135,
     quantityAvailable: 5,
   },
   {
-    sellerSlug: "lucia-vega",
+    sellerUsername: "lucia-vega",
     countryCode: "ES",
     citySlug: "madrid",
     priceCents: 210,
     quantityAvailable: 2,
   },
   {
-    sellerSlug: "ana-perez",
+    sellerUsername: "ana-perez",
     countryCode: "MX",
     citySlug: "ciudad-de-mexico",
     priceCents: 175,
     quantityAvailable: 3,
   },
   {
-    sellerSlug: "diego-mora",
+    sellerUsername: "diego-mora",
     countryCode: "PA",
     citySlug: "ciudad-de-panama",
     priceCents: 145,
     quantityAvailable: 2,
   },
   {
-    sellerSlug: "lucia-vega",
+    sellerUsername: "lucia-vega",
     countryCode: "PE",
     citySlug: "lima",
     priceCents: 155,
     quantityAvailable: 3,
   },
   {
-    sellerSlug: "ana-perez",
+    sellerUsername: "ana-perez",
     countryCode: "US",
     citySlug: "miami",
     priceCents: 240,
@@ -178,47 +172,15 @@ const seedListingEntries: SeedListing[] = [
   },
 ];
 
-function toSlug(value: string) {
-  return value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
-}
-
 async function seedLocationsIntoDb(
   ctx: MutationCtx,
 ): Promise<SeedLocationsResult> {
-  let countriesCreated = 0;
-  let countriesUpdated = 0;
   let citiesCreated = 0;
   let citiesUpdated = 0;
 
   for (const country of locationSeed) {
-    const existingCountry = await ctx.db
-      .query("countries")
-      .withIndex("by_code", (q) => q.eq("code", country.code))
-      .unique();
-
-    const countryFields = {
-      code: country.code,
-      name: country.name,
-      currency: country.currency,
-      currencySymbol: country.currencySymbol,
-      flagEmoji: country.flagEmoji,
-    };
-
-    if (existingCountry) {
-      await ctx.db.patch(existingCountry._id, countryFields);
-      countriesUpdated += 1;
-    } else {
-      await ctx.db.insert("countries", countryFields);
-      countriesCreated += 1;
-    }
-
     for (const cityName of country.cities) {
-      const slug = toSlug(cityName);
+      const slug = toLocationSlug(cityName);
       const existingCity = await ctx.db
         .query("cities")
         .withIndex("by_countryCode_and_slug", (q) =>
@@ -228,6 +190,10 @@ async function seedLocationsIntoDb(
 
       const cityFields = {
         countryCode: country.code,
+        countryName: country.name,
+        currency: country.currency,
+        currencySymbol: country.currencySymbol,
+        flagEmoji: country.flagEmoji,
         name: cityName,
         slug,
       };
@@ -243,8 +209,6 @@ async function seedLocationsIntoDb(
   }
 
   return {
-    countriesCreated,
-    countriesUpdated,
     citiesCreated,
     citiesUpdated,
   };
@@ -344,21 +308,21 @@ async function upsertSeedSeller(
   ctx: MutationCtx,
   seller: SeedSeller,
   userId: Id<"users">,
-  defaultCityId: Id<"cities"> | undefined,
+  defaultCity: Doc<"cities"> | undefined,
   now: number,
 ): Promise<{ sellerId: Id<"sellers">; created: boolean }> {
   const existingSeller = await ctx.db
     .query("sellers")
-    .withIndex("by_slug", (q) => q.eq("slug", seller.slug))
+    .withIndex("by_username", (q) => q.eq("username", seller.username))
     .unique();
 
   const sellerFields = {
     userId,
     status: "active" as const,
     activatedAt: existingSeller?.activatedAt ?? now,
-    defaultCityId: defaultCityId ?? existingSeller?.defaultCityId,
-    displayName: seller.displayName,
-    slug: seller.slug,
+    defaultCityId: defaultCity?._id ?? existingSeller?.defaultCityId,
+    defaultCurrency: defaultCity?.currency ?? existingSeller?.defaultCurrency,
+    username: seller.username,
     avatarUrl: seller.avatarUrl,
     bio: seller.bio,
     totalSalesCount: 0,
@@ -398,6 +362,48 @@ async function loadListingsBySeller(
   return listingsByKey;
 }
 
+function pickSeedListingStickers(
+  stickers: Doc<"stickers">[],
+  count: number,
+): Doc<"stickers">[] {
+  const nonBadgeStickers = stickers.filter(
+    (sticker) => sticker.label !== "BADGE",
+  );
+
+  if (nonBadgeStickers.length < count) {
+    throw new Error("Not enough non-BADGE stickers to seed listings.");
+  }
+
+  const pickedStickers: Doc<"stickers">[] = [];
+  const usedSections = new Set<string>();
+  const step = nonBadgeStickers.length / count;
+
+  for (let i = 0; i < count; i += 1) {
+    const targetIndex = Math.min(
+      nonBadgeStickers.length - 1,
+      Math.floor(i * step),
+    );
+
+    let selectedSticker: Doc<"stickers"> | null = null;
+
+    for (let offset = 0; offset < nonBadgeStickers.length; offset += 1) {
+      const candidate =
+        nonBadgeStickers[(targetIndex + offset) % nonBadgeStickers.length];
+
+      if (!usedSections.has(candidate.section)) {
+        selectedSticker = candidate;
+        break;
+      }
+    }
+
+    const sticker = selectedSticker ?? nonBadgeStickers[targetIndex];
+    pickedStickers.push(sticker);
+    usedSections.add(sticker.section);
+  }
+
+  return pickedStickers;
+}
+
 export const seedLocations = internalMutation({
   args: {},
   handler: async (ctx): Promise<SeedLocationsResult> => {
@@ -418,33 +424,34 @@ export const seedListings = internalMutation({
     const now = Date.now();
     const stickerSeedResult = await seedStickersIntoDb(ctx);
 
-    const [countries, cities, activeStickers] = await Promise.all([
-      ctx.db.query("countries").withIndex("by_name").take(100),
+    const [cities, activeStickers] = await Promise.all([
       ctx.db.query("cities").withIndex("by_countryCode_and_name").take(500),
       ctx.db
         .query("stickers")
         .withIndex("by_isActive", (q) => q.eq("isActive", true))
-        .take(seedListingEntries.length),
+        .take(2000),
     ]);
 
-    if (countries.length === 0 || cities.length === 0) {
+    if (cities.length === 0) {
       throw new Error("Seed locations first before seeding listings.");
     }
 
-    if (activeStickers.length < seedListingEntries.length) {
+    const listingStickers = pickSeedListingStickers(
+      activeStickers,
+      seedListingEntries.length,
+    );
+
+    if (listingStickers.length < seedListingEntries.length) {
       throw new Error("Not enough active stickers to seed listings.");
     }
 
-    const countryByCode = new Map(
-      countries.map((country) => [country.code, country]),
-    );
     const cityByLocation = new Map(
       cities.map((city) => [`${city.countryCode}:${city.slug}`, city]),
     );
-    const defaultCityIdBySellerSlug = new Map<string, Id<"cities">>();
+    const defaultCityBySellerUsername = new Map<string, Doc<"cities">>();
 
     for (const listingSeed of seedListingEntries) {
-      if (defaultCityIdBySellerSlug.has(listingSeed.sellerSlug)) {
+      if (defaultCityBySellerUsername.has(listingSeed.sellerUsername)) {
         continue;
       }
 
@@ -458,7 +465,7 @@ export const seedListings = internalMutation({
         );
       }
 
-      defaultCityIdBySellerSlug.set(listingSeed.sellerSlug, city._id);
+      defaultCityBySellerUsername.set(listingSeed.sellerUsername, city);
     }
 
     let usersCreated = 0;
@@ -466,7 +473,7 @@ export const seedListings = internalMutation({
     let sellersCreated = 0;
     let sellersUpdated = 0;
 
-    const sellerIdBySlug = new Map<string, Id<"sellers">>();
+    const sellerIdByUsername = new Map<string, Id<"sellers">>();
 
     for (const seller of seedSellers) {
       const userResult = await upsertSeedUser(ctx, seller);
@@ -481,7 +488,7 @@ export const seedListings = internalMutation({
         ctx,
         seller,
         userResult.userId,
-        defaultCityIdBySellerSlug.get(seller.slug),
+        defaultCityBySellerUsername.get(seller.username),
         now,
       );
 
@@ -491,7 +498,7 @@ export const seedListings = internalMutation({
         sellersUpdated += 1;
       }
 
-      sellerIdBySlug.set(seller.slug, sellerResult.sellerId);
+      sellerIdByUsername.set(seller.username, sellerResult.sellerId);
     }
 
     const existingListingsBySeller = new Map<
@@ -500,14 +507,16 @@ export const seedListings = internalMutation({
     >();
 
     for (const seller of seedSellers) {
-      const sellerId = sellerIdBySlug.get(seller.slug);
+      const sellerId = sellerIdByUsername.get(seller.username);
 
       if (!sellerId) {
-        throw new Error(`Missing seeded seller for slug ${seller.slug}.`);
+        throw new Error(
+          `Missing seeded seller for username ${seller.username}.`,
+        );
       }
 
       existingListingsBySeller.set(
-        seller.slug,
+        seller.username,
         await loadListingsBySeller(ctx, sellerId),
       );
     }
@@ -517,19 +526,14 @@ export const seedListings = internalMutation({
     const activeListingCountBySeller = new Map<Id<"sellers">, number>();
 
     for (const [index, listingSeed] of seedListingEntries.entries()) {
-      const sellerId = sellerIdBySlug.get(listingSeed.sellerSlug);
-      const country = countryByCode.get(listingSeed.countryCode);
+      const sellerId = sellerIdByUsername.get(listingSeed.sellerUsername);
       const city = cityByLocation.get(
         `${listingSeed.countryCode}:${listingSeed.citySlug}`,
       );
-      const sticker = activeStickers[index];
+      const sticker = listingStickers[index];
 
       if (!sellerId) {
-        throw new Error(`Missing seller ${listingSeed.sellerSlug}.`);
-      }
-
-      if (!country) {
-        throw new Error(`Missing country ${listingSeed.countryCode}.`);
+        throw new Error(`Missing seller ${listingSeed.sellerUsername}.`);
       }
 
       if (!city) {
@@ -541,12 +545,11 @@ export const seedListings = internalMutation({
       const listingFields = {
         stickerId: sticker._id,
         sellerId,
-        countryCode: listingSeed.countryCode,
         cityId: city._id,
-        cityName: city.name,
         priceCents: listingSeed.priceCents,
-        currency: country.currency,
-        imageUrl: `https://placehold.co/600x600/png?text=${sticker.code}`,
+        currency: city.currency,
+        imageUrl:
+          "https://cmdjofznewdbwdxakicu.supabase.co/storage/v1/object/public/photos/bicho.jpg",
         quantityAvailable: listingSeed.quantityAvailable,
         quantitySold: 0,
         status: "active" as ListingStatus,
@@ -555,7 +558,7 @@ export const seedListings = internalMutation({
 
       const listingKey = `${sticker._id}:${city._id}`;
       const existingListing = existingListingsBySeller
-        .get(listingSeed.sellerSlug)
+        .get(listingSeed.sellerUsername)
         ?.get(listingKey);
 
       if (existingListing) {
@@ -573,7 +576,7 @@ export const seedListings = internalMutation({
     }
 
     for (const seller of seedSellers) {
-      const sellerId = sellerIdBySlug.get(seller.slug);
+      const sellerId = sellerIdByUsername.get(seller.username);
 
       if (!sellerId) {
         continue;

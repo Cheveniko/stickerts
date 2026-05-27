@@ -6,7 +6,7 @@
   import ListingsGrid from "$lib/components/listings-grid.svelte";
 
   const listingsQuery = useQuery(
-    api.listings.getActiveListingsWithCountryAndSticker,
+    api.listings.getActiveListingsWithDetails,
     () => ({}),
   );
 </script>

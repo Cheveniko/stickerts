@@ -2,6 +2,7 @@
   import { browser } from "$app/environment";
   import { api } from "$convex/_generated/api";
   import type { ListingWithRelations } from "$convex/listings";
+  import { closeOnEscapeHandler } from "$lib/utils";
   import { useConvexClient } from "convex-svelte";
   import { fade, fly } from "svelte/transition";
   import { cubicOut } from "svelte/easing";
@@ -58,6 +59,8 @@
       !submitSuccess &&
       !isLocallyBlocked,
   );
+
+  const closeOnEscape = closeOnEscapeHandler(() => open, close);
 
   const contactOptions: {
     id: ContactOption;
@@ -134,19 +137,13 @@
     }, 300);
   }
 
-  function handleKeydown(event: KeyboardEvent) {
-    if (event.key === "Escape" && open) {
-      close();
-    }
-  }
-
   function selectOption(option: { id: ContactOption; label: string }) {
     selectedOption = option.id;
     const stickerLabel = listing.sticker.label;
     const stickerCode = listing.sticker.code
       ? ` - ${listing.sticker.code}`
       : "";
-    const prefill = `Hola ${listing.seller.displayName}, quiero comprar tu cromo ${stickerLabel}${stickerCode}. Por favor contáctame vía ${option.label} a: `;
+    const prefill = `Hola ${listing.sellerName}, quiero comprar tu cromo ${stickerLabel}${stickerCode}. Por favor contáctame vía ${option.label} a: `;
     message = prefill;
 
     const len = prefill.length;
@@ -203,7 +200,7 @@
   }
 </script>
 
-<svelte:window onkeydown={handleKeydown} />
+<svelte:window onkeydown={closeOnEscape} />
 
 {#if open}
   <div

@@ -64,5 +64,16 @@ export function formatCityName(cityName: string, flagEmoji?: string) {
 }
 
 export function getInitial(name: string) {
-  return name.trim()[0].toUpperCase();
+  return name.trim().charAt(0).toUpperCase();
+}
+
+export function closeOnEscapeHandler(
+  isOpen: () => boolean,
+  onClose: () => void,
+) {
+  return (event: KeyboardEvent) => {
+    if (event.key === "Escape" && isOpen()) {
+      onClose();
+    }
+  };
 }

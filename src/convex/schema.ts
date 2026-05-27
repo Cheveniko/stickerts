@@ -44,9 +44,9 @@ export default defineSchema({
     status: sellerStatusValidator,
     activatedAt: v.number(),
     defaultCityId: v.optional(v.id("cities")),
+    defaultCurrency: v.optional(v.string()),
     paymentId: v.optional(v.string()),
-    displayName: v.string(),
-    slug: v.string(),
+    username: v.string(),
     avatarUrl: v.optional(v.string()),
     bio: v.optional(v.string()),
     totalSalesCount: v.number(),
@@ -56,21 +56,15 @@ export default defineSchema({
     lastSoldAt: v.optional(v.number()),
   })
     .index("by_userId", ["userId"])
-    .index("by_slug", ["slug"])
+    .index("by_username", ["username"])
     .index("by_status", ["status"]),
-
-  countries: defineTable({
-    code: v.string(),
-    name: v.string(),
-    currency: v.string(),
-    currencySymbol: v.string(),
-    flagEmoji: v.string(),
-  })
-    .index("by_code", ["code"])
-    .index("by_name", ["name"]),
 
   cities: defineTable({
     countryCode: v.string(),
+    countryName: v.string(),
+    currency: v.string(),
+    currencySymbol: v.string(),
+    flagEmoji: v.string(),
     name: v.string(),
     slug: v.string(),
   })
@@ -96,9 +90,7 @@ export default defineSchema({
   listings: defineTable({
     stickerId: v.id("stickers"),
     sellerId: v.id("sellers"),
-    countryCode: v.string(),
     cityId: v.id("cities"),
-    cityName: v.string(),
     priceCents: v.number(),
     currency: v.string(),
     imageUrl: v.string(),
@@ -109,13 +101,7 @@ export default defineSchema({
   })
     .index("by_status", ["status"])
     .index("by_stickerId_and_status", ["stickerId", "status"])
-    .index("by_countryCode_and_status", ["countryCode", "status"])
     .index("by_cityId_and_status", ["cityId", "status"])
-    .index("by_countryCode_and_status_and_stickerId", [
-      "countryCode",
-      "status",
-      "stickerId",
-    ])
     .index("by_cityId_and_status_and_stickerId", [
       "cityId",
       "status",

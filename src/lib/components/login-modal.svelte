@@ -1,6 +1,7 @@
 <script lang="ts">
   import { page } from "$app/state";
   import { useAuth } from "$lib/hooks/useAuth.svelte";
+  import { closeOnEscapeHandler } from "$lib/utils";
   import { fade, fly } from "svelte/transition";
   import { cubicOut } from "svelte/easing";
   import { Input } from "$lib/components/ui/input/index.js";
@@ -18,6 +19,7 @@
   let { open = $bindable() }: Props = $props();
 
   const auth = useAuth();
+  const closeOnEscape = closeOnEscapeHandler(() => open, close);
 
   let email = $state("");
   let view = $state<View>("form");
@@ -35,12 +37,6 @@
       view = "form";
       errorMessage = null;
     }, 300);
-  }
-
-  function handleKeydown(event: KeyboardEvent) {
-    if (event.key === "Escape" && open) {
-      close();
-    }
   }
 
   function handleEmailInput() {
@@ -79,7 +75,7 @@
   }
 </script>
 
-<svelte:window onkeydown={handleKeydown} />
+<svelte:window onkeydown={closeOnEscape} />
 
 {#if open}
   <div

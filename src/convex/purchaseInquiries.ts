@@ -204,12 +204,12 @@ export const sendPurchaseInquiry = action({
       to: sellerEmail,
       subject: buildEmailSubject(target.sticker),
       text: buildEmailText({
-        sellerName: target.seller.displayName,
+        sellerName: target.sellerUser.name,
         sticker: target.sticker,
         message,
       }),
       html: buildEmailHtml({
-        sellerName: target.seller.displayName,
+        sellerName: target.sellerUser.name,
         sticker: target.sticker,
         message,
       }),

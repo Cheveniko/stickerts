@@ -15,7 +15,7 @@
       ? m.footer_theme_light()
       : userPrefersMode.current === "dark"
         ? m.footer_theme_dark()
-        : m.footer_theme_system()
+        : m.footer_theme_system(),
   );
 </script>
 
@@ -26,15 +26,13 @@
 
     <!-- Center: Legal links -->
     <div class="flex items-center gap-2 text-xs text-muted-foreground">
-      <a
-        href="/terms"
-        class="hover:text-foreground transition-colors"
-      >{m.footer_terms()}</a>
+      <a href="/terms" class="transition-colors hover:text-foreground"
+        >{m.footer_terms()}</a
+      >
       <span aria-hidden="true">·</span>
-      <a
-        href="/privacy"
-        class="hover:text-foreground transition-colors"
-      >{m.footer_privacy()}</a>
+      <a href="/privacy" class="transition-colors hover:text-foreground"
+        >{m.footer_privacy()}</a
+      >
     </div>
 
     <!-- Right: Theme toggle + attribution -->
@@ -43,7 +41,7 @@
         onclick={cycleMode}
         aria-label={modeLabel}
         title={modeLabel}
-        class="text-muted-foreground hover:text-foreground transition-colors"
+        class="text-muted-foreground transition-colors hover:text-foreground"
       >
         {#if userPrefersMode.current === "light"}
           <Sun class="size-4" />
@@ -58,8 +56,9 @@
         href="https://codeline.ai"
         target="_blank"
         rel="noopener noreferrer"
-        class="text-xs text-muted-foreground hover:text-foreground transition-colors"
-      >Codeline.ai</a>
+        class="text-xs text-muted-foreground transition-colors hover:text-foreground"
+        >Codeline.ai</a
+      >
     </div>
   </div>
 </footer>

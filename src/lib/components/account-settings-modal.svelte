@@ -1,26 +1,27 @@
 <script lang="ts">
   import { fade, fly } from "svelte/transition";
   import { cubicOut } from "svelte/easing";
+  import { closeOnEscapeHandler } from "$lib/utils";
   import { useAuth } from "$lib/hooks/useAuth.svelte";
   import ProfileSettings from "$lib/components/profile-settings.svelte";
   import StickersSettings from "$lib/components/stickers-settings.svelte";
-  import { useCurrentUser } from "$lib/hooks/useCurrentUser.svelte";
   import UserIcon from "@lucide/svelte/icons/user";
   import LayoutGridIcon from "@lucide/svelte/icons/layout-grid";
   import LogOutIcon from "@lucide/svelte/icons/log-out";
   import XIcon from "@lucide/svelte/icons/x";
+  import type { User } from "$convex/users";
+  import type { CurrentSeller } from "$convex/sellers";
+  import SellerSettings from "./seller-settings.svelte";
+  import Separator from "./ui/separator/separator.svelte";
 
-  type Props = { open: boolean };
-  let { open = $bindable() }: Props = $props();
+  type Props = { user: User; seller: CurrentSeller | null; open: boolean };
+
+  let { user, seller, open = $bindable() }: Props = $props();
 
   let activeSection = $state<"profile" | "stickers">("profile");
   let signingOut = $state(false);
 
   const auth = useAuth();
-  const getCurrentUser = useCurrentUser();
-
-  let currentUser = $derived(getCurrentUser());
-
   function close() {
     open = false;
     setTimeout(() => {
@@ -28,9 +29,7 @@
     }, 300);
   }
 
-  function handleKeydown(event: KeyboardEvent) {
-    if (event.key === "Escape" && open) close();
-  }
+  const closeOnEscape = closeOnEscapeHandler(() => open, close);
 
   async function handleSignOut() {
     signingOut = true;
@@ -43,7 +42,7 @@
   }
 </script>
 
-<svelte:window onkeydown={handleKeydown} />
+<svelte:window onkeydown={closeOnEscape} />
 
 {#if open}
   <div
@@ -125,21 +124,20 @@
         </div>
 
         <!-- RIGHT PANEL -->
-        <div class="flex-1 overflow-y-auto p-6 pt-12">
+        <div class="flex-1 overflow-y-auto p-6 pt-8">
           {#if activeSection === "profile"}
-            {#if currentUser.status === "authenticated"}
-              <ProfileSettings user={currentUser.user} />
-            {:else if currentUser.status === "loading"}
-              <div class="flex flex-1 items-center justify-center py-8 text-center">
-                <p class="text-sm text-muted-foreground">Cargando perfil...</p>
-              </div>
-            {:else}
-              <div class="flex flex-1 items-center justify-center py-8 text-center">
-                <p class="text-sm text-muted-foreground">
-                  No pudimos cargar tu perfil.
+            <div class="">
+              <ProfileSettings {user} />
+              <Separator class="my-4" />
+              {#if seller}
+                <SellerSettings {seller} />
+              {:else}
+                <p class="text-sm text-pretty text-muted-foreground">
+                  Tu perfil de vendedor se completa cuando actives tu cuenta de
+                  vendedor.
                 </p>
-              </div>
-            {/if}
+              {/if}
+            </div>
           {:else}
             <StickersSettings />
           {/if}

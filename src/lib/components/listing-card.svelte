@@ -3,7 +3,7 @@
   import * as m from "$lib/paraglide/messages";
   import * as Card from "$lib/components/ui/card/index.js";
   import { getLocale, localizeHref } from "$lib/paraglide/runtime";
-  import { formatCityName, formatMoney } from "$lib/utils";
+  import { formatCityName, formatMoney, getInitial } from "$lib/utils";
   import PurchaseModal from "$lib/components/purchase-modal.svelte";
 
   type Props = {
@@ -16,13 +16,13 @@
     formatMoney({
       amount: listing.priceCents,
       currency: listing.currency,
-      currencySymbol: listing.country.currencySymbol,
+      currencySymbol: listing.city.currencySymbol,
       locale: getLocale(),
     }),
   );
 
   let listingCity = $derived(
-    formatCityName(listing.cityName, listing.country.flagEmoji),
+    formatCityName(listing.city.name, listing.city.flagEmoji),
   );
 
   let listingHref = $derived(localizeHref(`/listing/${listing._id}`));
@@ -84,9 +84,9 @@
   <Card.Footer class="items-end justify-between gap-2 px-3 pt-2.5 pb-3">
     <div
       class="flex size-5 shrink-0 items-center justify-center rounded-full bg-muted text-[9px] font-bold text-muted-foreground ring-1 ring-black/10 dark:ring-white/10"
-      title={listing.seller.displayName}
+      title={listing.sellerName}
     >
-      {listing.seller.displayName.charAt(0).toUpperCase()}
+      {getInitial(listing.sellerName)}
     </div>
 
     <div class="flex shrink-0 items-center gap-2">

@@ -1,6 +1,5 @@
 <script lang="ts">
   import { Search } from "@lucide/svelte";
-  import LanguageSwitcher from "$lib/components/language-switcher.svelte";
   import { Button } from "$lib/components/ui/button";
   import LoginModal from "$lib/components/login-modal.svelte";
   import AccountSettingsModal from "$lib/components/account-settings-modal.svelte";
@@ -8,15 +7,13 @@
   import { useCurrentUser } from "$lib/hooks/useCurrentUser.svelte";
   import * as m from "$lib/paraglide/messages";
   import { cn, getInitial } from "$lib/utils";
-  import { useAuth } from "$lib/hooks/useAuth.svelte";
 
   let loginOpen = $state(false);
   let settingsOpen = $state(false);
 
-  const auth = useAuth();
-  const getCurrentUser = useCurrentUser();
+  const currentUser = $derived.by(useCurrentUser());
 
-  let currentUser = $derived(getCurrentUser());
+  // $inspect(currentUser);
 </script>
 
 <header
@@ -40,18 +37,14 @@
   <div class="flex shrink-0 items-center gap-2 md:gap-3">
     <span class="text-sm text-muted-foreground">{m.nav_how_it_works()}</span>
     <!-- <LanguageSwitcher /> -->
-    {#if auth.isAuthenticated}
+    {#if currentUser.user}
       <button
         onclick={() => (settingsOpen = true)}
         class="flex items-center gap-1.5 rounded-full border border-border bg-background px-2 py-1 text-sm font-medium transition-[background-color,transform] duration-150 hover:bg-muted active:scale-[0.96]"
       >
         <Avatar.Root size="sm" class="after:border-0">
           <Avatar.Fallback>
-            {getInitial(
-              currentUser.status === "authenticated"
-                ? (currentUser.user.name ?? currentUser.user.email ?? "")
-                : "",
-            )}
+            {getInitial(currentUser.user.name)}
           </Avatar.Fallback>
         </Avatar.Root>
         Ajustes
@@ -63,4 +56,10 @@
 </header>
 
 <LoginModal bind:open={loginOpen} />
-<AccountSettingsModal bind:open={settingsOpen} />
+{#if currentUser.user}
+  <AccountSettingsModal
+    user={currentUser.user}
+    seller={currentUser.seller}
+    bind:open={settingsOpen}
+  />
+{/if}

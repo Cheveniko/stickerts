@@ -9,8 +9,8 @@
  */
 
 import type * as auth from "../auth.js";
+import type * as authHelpers from "../authHelpers.js";
 import type * as cities from "../cities.js";
-import type * as countries from "../countries.js";
 import type * as http from "../http.js";
 import type * as listings from "../listings.js";
 import type * as locationSeed from "../locationSeed.js";
@@ -29,8 +29,8 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
+  authHelpers: typeof authHelpers;
   cities: typeof cities;
-  countries: typeof countries;
   http: typeof http;
   listings: typeof listings;
   locationSeed: typeof locationSeed;
