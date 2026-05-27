@@ -18,10 +18,13 @@ type SignInParams =
 
 type SignInResult = {
   signingIn: boolean;
-  redirect?: URL;
+  redirect?: string;
 };
 
+type AuthStatus = "loading" | "authenticated" | "anonymous";
+
 type AuthContext = {
+  readonly status: AuthStatus;
   readonly isLoading: boolean;
   readonly isAuthenticated: boolean;
   readonly token: string | null;
@@ -80,23 +83,30 @@ export function setupConvexAuth({
 
   setConvexClientContext(convexClient);
 
-  const initialServerState = getServerState();
   const serverState = $derived(getServerState());
   const tokenFromServer = $derived(serverState._state.token);
   let tokenOverride = $state<string | null | undefined>(undefined);
   const token = $derived(
     tokenOverride === undefined ? tokenFromServer : tokenOverride,
   );
+  let authStatus = $state<AuthStatus>("loading");
   let isLoading = $state(false);
 
-  const registerAuth = () =>
-    convexClient.setAuth(({ forceRefreshToken }) =>
-      fetchAccessToken({ forceRefreshToken }),
-    );
+  const registerAuth = () => {
+    authStatus = "loading";
+    convexClient.setAuth(
+      ({ forceRefreshToken }) => fetchAccessToken({ forceRefreshToken }),
+      (isAuthenticated) => {
+        authStatus = isAuthenticated ? "authenticated" : "anonymous";
 
-  if (initialServerState._state.token !== null) {
-    registerAuth();
-  }
+        if (!isAuthenticated) {
+          tokenOverride = null;
+        }
+      },
+    );
+  };
+
+  registerAuth();
 
   async function fetchAccessToken({ forceRefreshToken = false } = {}) {
     if (!forceRefreshToken) {
@@ -129,9 +139,8 @@ export function setupConvexAuth({
       });
 
       if (result.redirect) {
-        const redirect = new URL(result.redirect);
-        window.location.href = redirect.toString();
-        return { signingIn: false, redirect };
+        window.location.href = result.redirect;
+        return { signingIn: false, redirect: result.redirect };
       }
 
       if (result.tokens !== undefined) {
@@ -153,20 +162,29 @@ export function setupConvexAuth({
 
     try {
       await runAuthAction("auth:signOut", {});
-    } finally {
+
       tokenOverride = null;
       registerAuth();
+
+      try {
+        await invalidateAll();
+      } catch (error) {
+        console.error("[auth] Failed to invalidate after sign out", error);
+      }
+    } finally {
       isLoading = false;
-      await invalidateAll();
     }
   }
 
   const auth = {
+    get status() {
+      return authStatus;
+    },
     get isLoading() {
-      return isLoading;
+      return isLoading || authStatus === "loading";
     },
     get isAuthenticated() {
-      return token !== null;
+      return authStatus === "authenticated";
     },
     get token() {
       return token;

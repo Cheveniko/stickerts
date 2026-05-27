@@ -1,35 +1,52 @@
 <script lang="ts">
+  import axios from "axios";
+  import { api } from "$convex/_generated/api";
   import { Input } from "$lib/components/ui/input/index.js";
   import { Label } from "$lib/components/ui/label/index.js";
   import * as Select from "$lib/components/ui/select/index.js";
   import ImageUploader from "$lib/components/image-uploader.svelte";
   import StickersCombobox from "$lib/components/stickers-combobox.svelte";
+  import { getConvexErrorMessage } from "$lib/convex-errors";
   import {
     CITIES_BY_COUNTRY_CODE,
     COUNTRIES,
     CURRENCIES,
   } from "$lib/location-data";
+  import {
+    createSignedUploadResponseSchema,
+    newListingFormSchema,
+  } from "$lib/schemas";
   import type { Sticker } from "$convex/stickers";
   import type { CurrentSeller } from "$convex/sellers";
   import { page } from "$app/state";
+  import { useConvexClient } from "convex-svelte";
 
   type Props = {
     id?: string;
     seller: CurrentSeller;
+    submitting?: boolean;
+    onSuccess?: () => void;
   };
 
-  const { id, seller }: Props = $props();
+  let {
+    id,
+    seller,
+    submitting = $bindable(false),
+    onSuccess,
+  }: Props = $props();
+  const convex = useConvexClient();
 
   const stickers = $derived<Sticker[]>(page.data.stickers ?? []);
   let imageFile = $state<File | null>(null);
   let selectedStickerId = $state<Sticker["_id"] | null>(null);
-  let price = $state<number | null>(null);
-  let quantity = $state(1);
+  let price = $state<number | null | undefined>(null);
+  let quantity = $state<number | undefined>(1);
   let selectedCountryCode = $derived(seller.city?.countryCode ?? "");
   let selectedCitySlug = $derived(seller.city?.slug ?? "");
   let selectedCurrency = $derived(
     seller.defaultCurrency ?? seller.city?.currency ?? "",
   );
+  let submitError = $state("");
 
   const selectedCountry = $derived(
     COUNTRIES.find((c) => c.code === selectedCountryCode),
@@ -64,9 +81,106 @@
     selectedCurrency = value;
   }
 
-  function handleSubmit(e: SubmitEvent) {
+  function resetForm() {
+    imageFile = null;
+    selectedStickerId = null;
+    price = null;
+    quantity = 1;
+    selectedCountryCode = seller.city?.countryCode ?? "";
+    selectedCitySlug = seller.city?.slug ?? "";
+    selectedCurrency = seller.defaultCurrency ?? seller.city?.currency ?? "";
+  }
+
+  async function handleSubmit(e: SubmitEvent) {
     e.preventDefault();
-    // TODO: implement listing submission
+
+    if (submitting) return;
+
+    submitError = "";
+
+    const parsedForm = newListingFormSchema.safeParse({
+      imageFile,
+      selectedStickerId,
+      selectedCitySlug,
+      selectedCurrency,
+      price,
+      quantity,
+    });
+
+    if (!parsedForm.success) {
+      submitError =
+        parsedForm.error.issues[0]?.message ??
+        "Revisa los datos antes de publicar.";
+      return;
+    }
+
+    const {
+      imageFile: listingImageFile,
+      stickerId,
+      citySlug,
+      currency,
+      priceCents,
+      quantityAvailable,
+    } = parsedForm.data;
+
+    let didSucceed = false;
+    submitting = true;
+
+    try {
+      const response = await axios.post("/api/uploads/listings", {
+        contentType: listingImageFile.type,
+        size: listingImageFile.size,
+      });
+
+      const parsedUploadResponse = createSignedUploadResponseSchema.safeParse(
+        response.data,
+      );
+
+      if (!parsedUploadResponse.success) {
+        throw new Error("No pudimos preparar la subida de la imagen.");
+      }
+
+      const { signedUrl, imageKey } = parsedUploadResponse.data;
+
+      await axios.put(signedUrl, listingImageFile, {
+        headers: {
+          "Content-Type": listingImageFile.type,
+        },
+      });
+
+      await convex.mutation(api.listings.createListing, {
+        stickerId,
+        citySlug,
+        currency,
+        imageKey,
+        priceCents,
+        quantityAvailable,
+      });
+
+      resetForm();
+      submitError = "";
+      didSucceed = true;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        submitError =
+          "No pudimos subir la imagen o publicar el cromo. Inténtalo de nuevo.";
+      } else if (
+        typeof error === "object" &&
+        error !== null &&
+        "data" in error
+      ) {
+        submitError = getConvexErrorMessage(error);
+      } else {
+        submitError =
+          "No pudimos subir la imagen o publicar el cromo. Inténtalo de nuevo.";
+      }
+    } finally {
+      submitting = false;
+    }
+
+    if (didSucceed) {
+      onSuccess?.();
+    }
   }
 </script>
 
@@ -97,6 +211,8 @@
         type="number"
         placeholder="0.00"
         bind:value={price}
+        min="0.01"
+        step="0.01"
         class="border-input bg-card"
       />
     </div>
@@ -107,6 +223,8 @@
         type="number"
         placeholder="1"
         bind:value={quantity}
+        min="1"
+        step="1"
         class="border-input bg-card"
       />
     </div>
@@ -191,4 +309,8 @@
       </Select.Content>
     </Select.Root>
   </div>
+
+  {#if submitError}
+    <p class="text-sm text-destructive">{submitError}</p>
+  {/if}
 </form>

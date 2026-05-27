@@ -6,7 +6,7 @@ import { z } from "zod";
 import { AWS_REGION, AWS_S3_BUCKET } from "$env/static/private";
 import { PUBLIC_CONVEX_URL } from "$env/static/public";
 import { api } from "$convex/_generated/api";
-import { AUTH_TOKEN_COOKIE } from "$lib/auth/constants";
+import { getValidAuthToken } from "$lib/auth/server";
 
 const maxUploadSizeBytes = 5 * 1024 * 1024;
 
@@ -38,7 +38,7 @@ function createConvexHttpClient(token: string) {
 }
 
 export const POST: RequestHandler = async ({ cookies, request }) => {
-  const token = cookies.get(AUTH_TOKEN_COOKIE);
+  const token = await getValidAuthToken(cookies);
 
   if (!token) {
     error(401, "No autenticado.");

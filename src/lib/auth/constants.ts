@@ -5,7 +5,6 @@ export const AUTH_VERIFIER_COOKIE = "__convexAuthOAuthVerifier";
 export type ConvexAuthServerState = {
   _state: {
     token: string | null;
-    refreshToken: string | null;
   };
   _timeFetched: number;
 };

@@ -34,7 +34,7 @@ export async function getCurrentSellerByUserId(
   return { ...seller, city };
 }
 
-async function requireCurrentSeller(
+export async function requireCurrentSeller(
   ctx: SellerDbCtx,
   userId: Seller["userId"],
 ) {

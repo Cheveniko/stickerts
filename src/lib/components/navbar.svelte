@@ -12,8 +12,6 @@
   let settingsOpen = $state(false);
 
   const currentUser = $derived.by(useCurrentUser());
-
-  // $inspect(currentUser);
 </script>
 
 <header
@@ -37,7 +35,7 @@
   <div class="flex shrink-0 items-center gap-2 md:gap-3">
     <span class="text-sm text-muted-foreground">{m.nav_how_it_works()}</span>
     <!-- <LanguageSwitcher /> -->
-    {#if currentUser.user}
+    {#if currentUser.status === "authenticated"}
       <button
         onclick={() => (settingsOpen = true)}
         class="flex items-center gap-1.5 rounded-full border border-border bg-background px-2 py-1 text-sm font-medium transition-[background-color,transform] duration-150 hover:bg-muted active:scale-[0.96]"
@@ -49,14 +47,16 @@
         </Avatar.Root>
         Ajustes
       </button>
-    {:else}
+    {:else if currentUser.status === "anonymous"}
       <Button onclick={() => (loginOpen = true)}>{m.nav_sell()}</Button>
+    {:else}
+      <div class="w-[90px]" aria-hidden="true"></div>
     {/if}
   </div>
 </header>
 
 <LoginModal bind:open={loginOpen} />
-{#if currentUser.user}
+{#if currentUser.status === "authenticated"}
   <AccountSettingsModal
     user={currentUser.user}
     seller={currentUser.seller}

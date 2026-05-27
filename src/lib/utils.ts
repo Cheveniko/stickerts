@@ -1,3 +1,4 @@
+import { PUBLIC_S3_BASE_URL } from "$env/static/public";
 import { clsx, type ClassValue } from "clsx";
 import { dinero, toDecimal } from "dinero.js";
 import * as dineroCurrencies from "dinero.js/currencies";
@@ -65,6 +66,10 @@ export function formatCityName(cityName: string, flagEmoji?: string) {
 
 export function getInitial(name: string) {
   return name.trim().charAt(0).toUpperCase();
+}
+
+export function getListingImageUrl(imageKey: string) {
+  return `${PUBLIC_S3_BASE_URL.replace(/\/$/, "")}/${imageKey.replace(/^\//, "")}`;
 }
 
 export function lockScroll(_node: HTMLElement) {

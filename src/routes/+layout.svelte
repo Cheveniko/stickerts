@@ -32,7 +32,7 @@
     {@render children()}
   </main>
   <Footer />
-  {#if currentUser.seller}
+  {#if currentUser.status === "authenticated" && currentUser.seller}
     <NewListingDrawer seller={currentUser.seller} />
   {/if}
 </div>

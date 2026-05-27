@@ -1,13 +1,12 @@
 <script lang="ts">
-  import { page } from "$app/state";
   import { fade } from "svelte/transition";
   import { expoOut } from "svelte/easing";
   import { closeOnEscapeHandler, lockScroll } from "$lib/utils";
   import { Button } from "$lib/components/ui/button/index.js";
+  import { Switch } from "$lib/components/ui/switch/index.js";
   import NewListingForm from "$lib/components/new-listing-form.svelte";
   import PlusIcon from "@lucide/svelte/icons/plus";
   import XIcon from "@lucide/svelte/icons/x";
-  import type { Sticker } from "$convex/stickers";
   import type { CurrentSeller } from "$convex/sellers";
 
   type Props = {
@@ -17,11 +16,18 @@
   const { seller }: Props = $props();
 
   let open = $state(false);
+  let isSubmitting = $state(false);
+  let publishMore = $state(false);
 
   const closeOnEscape = closeOnEscapeHandler(() => open, close);
 
   function close() {
+    if (isSubmitting) return;
     open = false;
+  }
+
+  function onFormSuccess() {
+    if (!publishMore) close();
   }
 
   function slideRight(
@@ -79,6 +85,7 @@
       </h2>
       <button
         aria-label="Cerrar"
+        disabled={isSubmitting}
         class="flex size-8 items-center justify-center rounded-xl text-muted-foreground transition-[background-color,transform] duration-150 hover:bg-muted active:scale-[0.96]"
         onclick={close}
       >
@@ -88,27 +95,41 @@
 
     <!-- Body -->
     <div class="flex-1 overflow-y-auto px-6 py-6">
-      <NewListingForm id="new-listing-form" {seller} />
+      <NewListingForm
+        id="new-listing-form"
+        {seller}
+        bind:submitting={isSubmitting}
+        onSuccess={onFormSuccess}
+      />
     </div>
 
     <!-- Footer -->
     <div
-      class="flex items-center justify-end gap-2 border-t border-border px-6 py-4"
+      class="flex items-center justify-between border-t border-border px-6 py-4"
     >
-      <Button
-        variant="ghost"
-        class="border border-border duration-150 active:scale-[0.96]"
-        onclick={close}
-      >
-        Cancelar
-      </Button>
-      <Button
-        type="submit"
-        form="new-listing-form"
-        class="duration-150 active:scale-[0.96]"
-      >
-        Publicar
-      </Button>
+      <label class="flex cursor-pointer items-center gap-2 text-sm select-none">
+        <Switch size="sm" bind:checked={publishMore} disabled={isSubmitting} />
+        Publicar más
+      </label>
+
+      <div class="flex items-center gap-2">
+        <Button
+          variant="ghost"
+          disabled={isSubmitting}
+          class="border border-border duration-150 active:scale-[0.96]"
+          onclick={close}
+        >
+          Cancelar
+        </Button>
+        <Button
+          type="submit"
+          form="new-listing-form"
+          disabled={isSubmitting}
+          class="duration-150 active:scale-[0.96]"
+        >
+          {isSubmitting ? "Publicando..." : "Publicar"}
+        </Button>
+      </div>
     </div>
   </div>
 {/if}

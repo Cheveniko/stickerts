@@ -93,7 +93,7 @@ export default defineSchema({
     citySlug: v.string(),
     priceCents: v.number(),
     currency: v.string(),
-    imageUrl: v.string(),
+    imageKey: v.string(),
     quantityAvailable: v.number(),
     quantitySold: v.number(),
     status: listingStatusValidator,

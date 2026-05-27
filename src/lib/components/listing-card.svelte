@@ -2,8 +2,13 @@
   import type { ListingWithRelations } from "$convex/listings";
   import * as m from "$lib/paraglide/messages";
   import * as Card from "$lib/components/ui/card/index.js";
-  import { getLocale, localizeHref } from "$lib/paraglide/runtime";
-  import { formatCityName, formatMoney, getInitial } from "$lib/utils";
+  import { getLocale } from "$lib/paraglide/runtime";
+  import {
+    formatCityName,
+    formatMoney,
+    getInitial,
+    getListingImageUrl,
+  } from "$lib/utils";
   import PurchaseModal from "$lib/components/purchase-modal.svelte";
 
   type Props = {
@@ -25,7 +30,7 @@
     formatCityName(listing.city.name, listing.city.flagEmoji),
   );
 
-  let listingHref = $derived(localizeHref(`/listing/${listing._id}`));
+  let listingImageUrl = $derived(getListingImageUrl(listing.imageKey));
 
   let listingImageAlt = $derived(
     m.listing_image_alt({ name: listing.sticker.label }),
@@ -43,7 +48,7 @@
 >
   <div class="relative aspect-3/4 overflow-hidden rounded-t-4xl">
     <img
-      src={listing.imageUrl}
+      src={listingImageUrl}
       alt={listingImageAlt}
       class="h-full w-full object-cover ring-1 ring-black/10 dark:ring-white/10"
     />
@@ -69,12 +74,9 @@
     <Card.Title
       class="line-clamp-2 text-sm leading-snug font-semibold [text-wrap:balance]"
     >
-      <a
-        href={listingHref}
-        class="text-inherit no-underline hover:text-foreground"
-      >
+      <p class="text-inherit no-underline hover:text-foreground">
         {listing.sticker.label}
-      </a>
+      </p>
     </Card.Title>
     <Card.Description class="text-xs">
       {listingCity}

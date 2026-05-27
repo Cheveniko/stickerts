@@ -525,8 +525,7 @@ export const seedListings = internalMutation({
         citySlug: city.slug,
         priceCents: listingSeed.priceCents,
         currency: city.currency,
-        imageUrl:
-          "https://cmdjofznewdbwdxakicu.supabase.co/storage/v1/object/public/photos/bicho.jpg",
+        imageKey: "listings/v220.png",
         quantityAvailable: listingSeed.quantityAvailable,
         quantitySold: 0,
         status: "active" as ListingStatus,

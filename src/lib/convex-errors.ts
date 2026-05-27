@@ -10,6 +10,15 @@ const convexErrorMessages = {
   CITY_NOT_FOUND: m.error_city_not_found,
 } as const;
 
+const directConvexErrorMessages = {
+  SELLER_INACTIVE: "Tu cuenta seller no puede publicar cromos en este momento.",
+  STICKER_NOT_FOUND: "No encontramos el cromo seleccionado.",
+  INVALID_CURRENCY: "La moneda debe ser un codigo ISO de 3 letras.",
+  INVALID_PRICE: "El precio debe ser mayor a 0.",
+  INVALID_QUANTITY: "La cantidad debe ser mayor a 0.",
+  INVALID_IMAGE_KEY: "La imagen seleccionada no pertenece a este seller.",
+} as const;
+
 export function getConvexErrorMessage(error: unknown) {
   const code =
     typeof error === "object" &&
@@ -24,6 +33,12 @@ export function getConvexErrorMessage(error: unknown) {
 
   if (code && code in convexErrorMessages) {
     return convexErrorMessages[code as keyof typeof convexErrorMessages]();
+  }
+
+  if (code && code in directConvexErrorMessages) {
+    return directConvexErrorMessages[
+      code as keyof typeof directConvexErrorMessages
+    ];
   }
 
   return m.error_generic_convex();

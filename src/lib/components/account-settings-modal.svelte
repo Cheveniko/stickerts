@@ -20,22 +20,43 @@
 
   let activeSection = $state<"profile" | "stickers">("profile");
   let signingOut = $state(false);
+  let signOutError = $state<string | null>(null);
 
   const auth = useAuth();
-  function close() {
+  function close(force = false) {
+    if (signingOut && !force) {
+      return;
+    }
+
     open = false;
     setTimeout(() => {
       activeSection = "profile";
+      signOutError = null;
     }, 300);
   }
 
-  const closeOnEscape = closeOnEscapeHandler(() => open, close);
+  function handleClose() {
+    close();
+  }
+
+  const closeOnEscape = closeOnEscapeHandler(() => open, handleClose);
 
   async function handleSignOut() {
+    if (signingOut) {
+      return;
+    }
+
     signingOut = true;
+    signOutError = null;
+
     try {
       await auth.signOut();
-      close();
+      close(true);
+    } catch (error) {
+      signOutError =
+        error instanceof Error
+          ? error.message
+          : "No pudimos cerrar tu sesion. Intenta de nuevo.";
     } finally {
       signingOut = false;
     }
@@ -49,7 +70,7 @@
     role="presentation"
     class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
     transition:fade={{ duration: 180 }}
-    onclick={close}
+    onclick={handleClose}
     {@attach lockScroll}
   ></div>
 {/if}
@@ -72,7 +93,8 @@
       <button
         aria-label="Cerrar"
         class="absolute top-3.5 right-3.5 z-10 flex size-8 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-[background-color,transform] duration-150 hover:bg-muted active:scale-[0.96]"
-        onclick={close}
+        disabled={signingOut}
+        onclick={handleClose}
       >
         <XIcon class="size-4" />
       </button>
@@ -86,8 +108,9 @@
           <nav class="flex flex-1 flex-col gap-0.5">
             <!-- Profile button -->
             <button
+              disabled={signingOut}
               class={[
-                "flex w-full items-center gap-2.5 rounded-2xl px-3 py-2 text-sm font-medium transition-colors duration-150",
+                "flex w-full items-center gap-2.5 rounded-2xl px-3 py-2 text-sm font-medium transition-colors duration-150 disabled:pointer-events-none disabled:opacity-50",
                 activeSection === "profile"
                   ? "bg-muted text-foreground"
                   : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
@@ -100,8 +123,9 @@
 
             <!-- Stickers button -->
             <button
+              disabled={signingOut}
               class={[
-                "flex w-full items-center gap-2.5 rounded-2xl px-3 py-2 text-sm font-medium transition-colors duration-150",
+                "flex w-full items-center gap-2.5 rounded-2xl px-3 py-2 text-sm font-medium transition-colors duration-150 disabled:pointer-events-none disabled:opacity-50",
                 activeSection === "stickers"
                   ? "bg-muted text-foreground"
                   : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
@@ -123,6 +147,11 @@
               <LogOutIcon class="size-4 shrink-0" />
               {signingOut ? "Saliendo" : "Cerrar sesión"}
             </button>
+            {#if signOutError}
+              <p role="alert" class="mt-2 px-3 text-sm text-destructive">
+                {signOutError}
+              </p>
+            {/if}
           </div>
         </div>
 

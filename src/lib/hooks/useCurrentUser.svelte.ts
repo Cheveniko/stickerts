@@ -37,11 +37,20 @@ const [getCurrentUserContext, setCurrentUserContext] =
 export function setupCurrentUser() {
   const auth = useAuth();
   const query = useQuery(api.users.getCurrentUser, () =>
-    auth.isAuthenticated ? {} : "skip",
+    auth.status === "authenticated" ? {} : "skip",
   );
 
   const currentUser = $derived.by<CurrentUserState>(() => {
-    if (!auth.isAuthenticated) {
+    if (auth.status === "loading") {
+      return {
+        status: "loading",
+        user: undefined,
+        seller: undefined,
+        error: undefined,
+      };
+    }
+
+    if (auth.status === "anonymous") {
       return {
         status: "anonymous",
         user: null,

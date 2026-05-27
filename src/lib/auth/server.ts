@@ -32,6 +32,71 @@ function createConvexHttpClient(token?: string) {
   return client;
 }
 
+async function refreshAuthTokens(cookies: Cookies) {
+  const refreshToken = cookies.get(AUTH_REFRESH_TOKEN_COOKIE);
+  if (!refreshToken) {
+    return null;
+  }
+
+  const result = await createConvexHttpClient().action(api.auth.signIn, {
+    refreshToken,
+  });
+
+  setAuthCookies(cookies, result.tokens ?? null);
+  return result.tokens ?? null;
+}
+
+async function revokeRemoteSession(cookies: Cookies) {
+  const accessToken = cookies.get(AUTH_TOKEN_COOKIE) ?? undefined;
+  const hasRefreshToken = cookies.get(AUTH_REFRESH_TOKEN_COOKIE) !== undefined;
+
+  if (accessToken) {
+    try {
+      await createConvexHttpClient(accessToken).action(api.auth.signOut, {});
+      return;
+    } catch (error) {
+      if (!hasRefreshToken) {
+        throw error;
+      }
+    }
+  }
+
+  if (!hasRefreshToken) {
+    return;
+  }
+
+  const tokens = await refreshAuthTokens(cookies);
+  if (!tokens) {
+    return;
+  }
+
+  await createConvexHttpClient(tokens.token).action(api.auth.signOut, {});
+}
+
+export async function getValidAuthToken(cookies: Cookies) {
+  const token = cookies.get(AUTH_TOKEN_COOKIE);
+  if (token) {
+    return token;
+  }
+
+  const refreshToken = cookies.get(AUTH_REFRESH_TOKEN_COOKIE);
+  if (!refreshToken) {
+    return null;
+  }
+
+  try {
+    const result = await createConvexHttpClient().action(api.auth.signIn, {
+      refreshToken,
+    });
+
+    setAuthCookies(cookies, result.tokens ?? null);
+    return result.tokens?.token ?? null;
+  } catch {
+    setAuthCookies(cookies, null);
+    return null;
+  }
+}
+
 function setAuthCookies(
   cookies: Cookies,
   tokens: { token: string; refreshToken: string } | null,
@@ -90,20 +155,27 @@ async function proxyAuthAction(event: RequestEvent) {
   }
 
   if (action === "auth:signOut") {
-    const token = event.cookies.get(AUTH_TOKEN_COOKIE) ?? undefined;
-
     try {
-      await createConvexHttpClient(token).action(api.auth.signOut, {});
-    } catch {
-      // The client can still clear its local state if sign out fails remotely.
-    }
+      await revokeRemoteSession(event.cookies);
 
-    setAuthCookies(event.cookies, null);
-    clearVerifierCookie(event.cookies);
-    return json(null);
+      setAuthCookies(event.cookies, null);
+      clearVerifierCookie(event.cookies);
+      return json(null);
+    } catch (error) {
+      console.error("[auth] Failed to revoke session during sign out", error);
+      return new Response("No pudimos cerrar tu sesion. Intenta de nuevo.", {
+        status: 500,
+      });
+    }
   }
 
+  const refreshRequested = Object.hasOwn(args, "refreshToken");
   const normalizedArgs = normalizeAuthActionArgs(args, event);
+
+  if (refreshRequested && normalizedArgs.refreshToken === undefined) {
+    return json({ tokens: null });
+  }
+
   const token =
     normalizedArgs.refreshToken !== undefined ||
     (typeof normalizedArgs.params === "object" &&
@@ -190,7 +262,6 @@ export function getAuthState(cookies: Cookies): ConvexAuthServerState {
   return {
     _state: {
       token: cookies.get(AUTH_TOKEN_COOKIE) ?? null,
-      refreshToken: cookies.get(AUTH_REFRESH_TOKEN_COOKIE) ?? null,
     },
     _timeFetched: Date.now(),
   };
