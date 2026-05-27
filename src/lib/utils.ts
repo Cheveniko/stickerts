@@ -67,6 +67,11 @@ export function getInitial(name: string) {
   return name.trim().charAt(0).toUpperCase();
 }
 
+export function lockScroll(_node: HTMLElement) {
+  document.body.classList.add("overflow-hidden");
+  return () => document.body.classList.remove("overflow-hidden");
+}
+
 export function closeOnEscapeHandler(
   isOpen: () => boolean,
   onClose: () => void,

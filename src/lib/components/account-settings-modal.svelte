@@ -1,7 +1,7 @@
 <script lang="ts">
   import { fade, fly } from "svelte/transition";
   import { cubicOut } from "svelte/easing";
-  import { closeOnEscapeHandler } from "$lib/utils";
+  import { closeOnEscapeHandler, lockScroll } from "$lib/utils";
   import { useAuth } from "$lib/hooks/useAuth.svelte";
   import ProfileSettings from "$lib/components/profile-settings.svelte";
   import StickersSettings from "$lib/components/stickers-settings.svelte";
@@ -50,6 +50,7 @@
     class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
     transition:fade={{ duration: 180 }}
     onclick={close}
+    {@attach lockScroll}
   ></div>
 {/if}
 
@@ -77,7 +78,9 @@
       </button>
 
       <!-- Two-column layout -->
-      <div class="flex min-h-[460px]">
+      <div
+        class="flex h-[480px] max-h-[calc(100dvh-2rem)] sm:h-[520px] lg:h-[540px]"
+      >
         <!-- LEFT RAIL -->
         <div class="flex w-40 shrink-0 flex-col border-r p-3 sm:w-44">
           <nav class="flex flex-1 flex-col gap-0.5">

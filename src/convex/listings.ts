@@ -1,6 +1,6 @@
 import { query, type QueryCtx } from "./_generated/server";
 import type { Doc } from "./_generated/dataModel";
-import type { City } from "./cities";
+import { getCityBySlug, type City } from "./cities";
 import type { Sticker } from "./stickers";
 import type { Seller } from "./sellers";
 
@@ -18,7 +18,7 @@ async function enrichListing(
   listing: Listing,
 ): Promise<ListingWithRelations> {
   const [city, sticker, seller] = await Promise.all([
-    ctx.db.get(listing.cityId),
+    getCityBySlug(ctx, listing.citySlug),
     ctx.db.get(listing.stickerId),
     ctx.db.get(listing.sellerId),
   ]);

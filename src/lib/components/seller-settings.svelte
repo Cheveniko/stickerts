@@ -89,11 +89,7 @@
     const city = availableCities.find((entry) => entry.slug === value);
     if (city) selectedCurrency = city.currency;
 
-    if (
-      isSavingCity ||
-      (seller.city?.countryCode === selectedCountryCode &&
-        seller.city?.slug === value)
-    ) {
+    if (isSavingCity || seller.city?.slug === value) {
       return;
     }
 
@@ -101,7 +97,6 @@
 
     try {
       await convex.mutation(api.sellers.updateCurrentSellerDefaultCity, {
-        countryCode: selectedCountryCode,
         citySlug: value,
       });
     } catch (error) {
@@ -204,7 +199,7 @@
             <span class="text-muted-foreground">País</span>
           {/if}
         </Select.Trigger>
-        <Select.Content>
+        <Select.Content class="max-h-60">
           {#each COUNTRIES as country (country.code)}
             <Select.Item
               value={country.code}
@@ -232,7 +227,7 @@
             <span class="text-muted-foreground">Ciudad</span>
           {/if}
         </Select.Trigger>
-        <Select.Content>
+        <Select.Content class="max-h-60">
           {#each availableCities as city (city.slug)}
             <Select.Item value={city.slug} label={city.name} />
           {/each}
@@ -261,7 +256,7 @@
           <span class="text-muted-foreground">Selecciona una moneda</span>
         {/if}
       </Select.Trigger>
-      <Select.Content>
+      <Select.Content class="max-h-60">
         {#each CURRENCIES as currency (currency.code)}
           <Select.Item
             value={currency.code}

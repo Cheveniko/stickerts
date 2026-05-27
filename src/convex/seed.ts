@@ -35,7 +35,6 @@ type SeedSeller = {
 
 type SeedListing = {
   sellerUsername: string;
-  countryCode: string;
   citySlug: string;
   priceCents: number;
   quantityAvailable: number;
@@ -102,70 +101,60 @@ const seedSellers: SeedSeller[] = [
 const seedListingEntries: SeedListing[] = [
   {
     sellerUsername: "ana-perez",
-    countryCode: "EC",
     citySlug: "quito",
     priceCents: 125,
     quantityAvailable: 3,
   },
   {
     sellerUsername: "diego-mora",
-    countryCode: "AR",
     citySlug: "buenos-aires",
     priceCents: 140,
     quantityAvailable: 2,
   },
   {
     sellerUsername: "lucia-vega",
-    countryCode: "BR",
     citySlug: "sao-paulo",
     priceCents: 150,
     quantityAvailable: 4,
   },
   {
     sellerUsername: "ana-perez",
-    countryCode: "CL",
     citySlug: "santiago",
     priceCents: 160,
     quantityAvailable: 1,
   },
   {
     sellerUsername: "diego-mora",
-    countryCode: "CO",
     citySlug: "bogota",
     priceCents: 135,
     quantityAvailable: 5,
   },
   {
     sellerUsername: "lucia-vega",
-    countryCode: "ES",
     citySlug: "madrid",
     priceCents: 210,
     quantityAvailable: 2,
   },
   {
     sellerUsername: "ana-perez",
-    countryCode: "MX",
     citySlug: "ciudad-de-mexico",
     priceCents: 175,
     quantityAvailable: 3,
   },
   {
     sellerUsername: "diego-mora",
-    countryCode: "PA",
     citySlug: "ciudad-de-panama",
     priceCents: 145,
     quantityAvailable: 2,
   },
   {
     sellerUsername: "lucia-vega",
-    countryCode: "PE",
     citySlug: "lima",
     priceCents: 155,
     quantityAvailable: 3,
   },
   {
     sellerUsername: "ana-perez",
-    countryCode: "US",
     citySlug: "miami",
     priceCents: 240,
     quantityAvailable: 1,
@@ -183,9 +172,7 @@ async function seedLocationsIntoDb(
       const slug = toLocationSlug(cityName);
       const existingCity = await ctx.db
         .query("cities")
-        .withIndex("by_countryCode_and_slug", (q) =>
-          q.eq("countryCode", country.code).eq("slug", slug),
-        )
+        .withIndex("by_slug", (q) => q.eq("slug", slug))
         .unique();
 
       const cityFields = {
@@ -320,7 +307,7 @@ async function upsertSeedSeller(
     userId,
     status: "active" as const,
     activatedAt: existingSeller?.activatedAt ?? now,
-    defaultCityId: defaultCity?._id ?? existingSeller?.defaultCityId,
+    defaultCitySlug: defaultCity?.slug ?? existingSeller?.defaultCitySlug,
     defaultCurrency: defaultCity?.currency ?? existingSeller?.defaultCurrency,
     username: seller.username,
     avatarUrl: seller.avatarUrl,
@@ -355,7 +342,7 @@ async function loadListingsBySeller(
       .take(100);
 
     for (const listing of listings) {
-      listingsByKey.set(`${listing.stickerId}:${listing.cityId}`, listing);
+      listingsByKey.set(`${listing.stickerId}:${listing.citySlug}`, listing);
     }
   }
 
@@ -445,9 +432,7 @@ export const seedListings = internalMutation({
       throw new Error("Not enough active stickers to seed listings.");
     }
 
-    const cityByLocation = new Map(
-      cities.map((city) => [`${city.countryCode}:${city.slug}`, city]),
-    );
+    const cityBySlug = new Map(cities.map((city) => [city.slug, city]));
     const defaultCityBySellerUsername = new Map<string, Doc<"cities">>();
 
     for (const listingSeed of seedListingEntries) {
@@ -455,14 +440,10 @@ export const seedListings = internalMutation({
         continue;
       }
 
-      const city = cityByLocation.get(
-        `${listingSeed.countryCode}:${listingSeed.citySlug}`,
-      );
+      const city = cityBySlug.get(listingSeed.citySlug);
 
       if (!city) {
-        throw new Error(
-          `Missing city ${listingSeed.citySlug} for country ${listingSeed.countryCode}.`,
-        );
+        throw new Error(`Missing city ${listingSeed.citySlug}.`);
       }
 
       defaultCityBySellerUsername.set(listingSeed.sellerUsername, city);
@@ -527,9 +508,7 @@ export const seedListings = internalMutation({
 
     for (const [index, listingSeed] of seedListingEntries.entries()) {
       const sellerId = sellerIdByUsername.get(listingSeed.sellerUsername);
-      const city = cityByLocation.get(
-        `${listingSeed.countryCode}:${listingSeed.citySlug}`,
-      );
+      const city = cityBySlug.get(listingSeed.citySlug);
       const sticker = listingStickers[index];
 
       if (!sellerId) {
@@ -537,15 +516,13 @@ export const seedListings = internalMutation({
       }
 
       if (!city) {
-        throw new Error(
-          `Missing city ${listingSeed.citySlug} for country ${listingSeed.countryCode}.`,
-        );
+        throw new Error(`Missing city ${listingSeed.citySlug}.`);
       }
 
       const listingFields = {
         stickerId: sticker._id,
         sellerId,
-        cityId: city._id,
+        citySlug: city.slug,
         priceCents: listingSeed.priceCents,
         currency: city.currency,
         imageUrl:
@@ -556,7 +533,7 @@ export const seedListings = internalMutation({
         updatedAt: now,
       };
 
-      const listingKey = `${sticker._id}:${city._id}`;
+      const listingKey = `${sticker._id}:${city.slug}`;
       const existingListing = existingListingsBySeller
         .get(listingSeed.sellerUsername)
         ?.get(listingKey);

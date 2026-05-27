@@ -2,7 +2,7 @@ import type { Doc } from "./_generated/dataModel";
 import { mutation, query, type QueryCtx } from "./_generated/server";
 import { ConvexError, v } from "convex/values";
 import { getCurrentAuthUserId, requireAuthUserId } from "./authHelpers";
-import type { City } from "./cities";
+import { getCityBySlug, type City } from "./cities";
 
 export type Seller = Doc<"sellers">;
 export type CurrentSeller = Seller & { city: City | null };
@@ -27,8 +27,8 @@ export async function getCurrentSellerByUserId(
 
   if (!seller) return null;
 
-  const city = seller.defaultCityId
-    ? await ctx.db.get(seller.defaultCityId)
+  const city = seller.defaultCitySlug
+    ? await getCityBySlug(ctx, seller.defaultCitySlug)
     : null;
 
   return { ...seller, city };
@@ -127,18 +127,12 @@ export const updateCurrentSellerDefaultCurrency = mutation({
 
 export const updateCurrentSellerDefaultCity = mutation({
   args: {
-    countryCode: v.string(),
     citySlug: v.string(),
   },
   handler: async (ctx, args) => {
     const userId = await requireAuthUserId(ctx);
     const seller = await requireCurrentSeller(ctx, userId);
-    const city = await ctx.db
-      .query("cities")
-      .withIndex("by_countryCode_and_slug", (q) =>
-        q.eq("countryCode", args.countryCode).eq("slug", args.citySlug),
-      )
-      .unique();
+    const city = await getCityBySlug(ctx, args.citySlug);
 
     if (!city) {
       throw new ConvexError({
@@ -148,7 +142,7 @@ export const updateCurrentSellerDefaultCity = mutation({
     }
 
     await ctx.db.patch(seller._id, {
-      defaultCityId: city._id,
+      defaultCitySlug: city.slug,
       defaultCurrency: city.currency,
     });
   },
