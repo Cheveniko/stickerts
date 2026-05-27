@@ -81,7 +81,8 @@
 
     return rankedOptions
       .sort(
-        (a, b) => a.rank - b.rank || a.option.label.localeCompare(b.option.label),
+        (a, b) =>
+          a.rank - b.rank || a.option.label.localeCompare(b.option.label),
       )
       .slice(0, MAX_VISIBLE_OPTIONS)
       .map(({ option }) => option);
@@ -115,7 +116,7 @@
 </script>
 
 <Popover.Root bind:open onOpenChange={handleOpenChange}>
-  <Popover.Trigger>
+  <Popover.Trigger class="hover:bg-card active:bg-card">
     {#snippet child({ props })}
       <Button
         {...props}
@@ -124,7 +125,7 @@
         role="combobox"
         aria-expanded={open}
         class={cn(
-          "h-11 w-full justify-between rounded-3xl bg-background px-4 font-normal",
+          "h-11 w-full justify-between rounded-3xl border-input bg-card px-4 font-normal hover:bg-card active:bg-card",
           !selectedOption && "text-muted-foreground",
         )}
         disabled={stickers.length === 0}
@@ -137,7 +138,7 @@
 
   <Popover.Content class="w-(--bits-popover-anchor-width) p-1" align="start">
     <Command.Root label="Seleccionar cromo" shouldFilter={false}>
-      <Command.Input bind:value={search} placeholder="Buscar sticker..." />
+      <Command.Input bind:value={search} placeholder="Buscar sticker" />
       <Command.List>
         <Command.Empty>{emptyStateMessage}</Command.Empty>
 

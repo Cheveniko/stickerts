@@ -5,7 +5,7 @@
     <div
       class="animate-pulse overflow-hidden rounded-4xl bg-card shadow-md ring-1 ring-foreground/5"
     >
-      <div class="aspect-square bg-muted"></div>
+      <div class="aspect-[3/4] bg-muted"></div>
       <div class="p-3">
         <div class="h-3.5 w-3/4 rounded-full bg-muted"></div>
         <div class="mt-1.5 h-3 w-2/5 rounded-full bg-muted"></div>

@@ -41,7 +41,7 @@
 <Card.Root
   class="cursor-default gap-0 p-0 [transition-property:transform,box-shadow] duration-200 hover:scale-[1.02] hover:shadow-lg"
 >
-  <div class="relative aspect-square overflow-hidden rounded-t-4xl">
+  <div class="relative aspect-3/4 overflow-hidden rounded-t-4xl">
     <img
       src={listing.imageUrl}
       alt={listingImageAlt}

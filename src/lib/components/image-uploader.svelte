@@ -1,42 +1,54 @@
 <script lang="ts">
+  import { onDestroy } from "svelte";
+  import {
+    LISTING_IMAGE_ACCEPTED_TYPES,
+    processListingImage,
+    type ListingImageContentType,
+  } from "$lib/image-processing";
   import ImagePlusIcon from "@lucide/svelte/icons/image-plus";
   import RefreshCwIcon from "@lucide/svelte/icons/refresh-cw";
+  import { cn } from "$lib/utils";
 
   type Props = {
     file?: File | null;
     maxSizeMb?: number;
-    accept?: string[];
     error?: string | null;
   };
 
-  let {
-    file = $bindable(null),
-    maxSizeMb = 5,
-    accept = ["image/jpeg", "image/png", "image/webp"],
-    error = null,
-  }: Props = $props();
+  const inputId = "image-uploader-input";
+
+  let { file = $bindable(null), maxSizeMb = 5, error = null }: Props = $props();
 
   let preview = $state<string | null>(null);
   let isDragging = $state(false);
+  let isProcessing = $state(false);
   let internalError = $state<string | null>(null);
-  let inputRef = $state<HTMLInputElement | null>(null);
+  let inputKey = $state(0);
 
+  let visiblePreview = $derived(file === null ? null : preview);
   let visibleError = $derived(error ?? internalError);
 
-  $effect(() => {
-    if (file === null) {
-      preview = null;
-      internalError = null;
-    }
+  function revokePreviewUrl(url: string | null) {
+    if (url) URL.revokeObjectURL(url);
+  }
+
+  onDestroy(() => {
+    revokePreviewUrl(preview);
   });
 
   function validateFile(f: File): string | null {
-    if (!accept.includes(f.type)) return "Solo JPG, PNG o WEBP";
+    if (
+      !LISTING_IMAGE_ACCEPTED_TYPES.includes(f.type as ListingImageContentType)
+    ) {
+      return "Solo JPG o PNG";
+    }
     if (f.size > maxSizeMb * 1024 * 1024) return `Máx ${maxSizeMb}MB`;
     return null;
   }
 
-  function handleFiles(fileList: FileList | File[]) {
+  async function handleFiles(fileList: FileList | File[]) {
+    if (isProcessing) return;
+
     const f = fileList[0];
     if (!f) return;
 
@@ -44,33 +56,54 @@
     if (validationError) {
       internalError = validationError;
       file = null;
+      revokePreviewUrl(preview);
+      preview = null;
+      inputKey += 1;
       return;
     }
 
-    internalError = null;
-    file = f;
+    isProcessing = true;
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      preview = e.target?.result as string;
-    };
-    reader.readAsDataURL(f);
+    try {
+      const processedImage = await processListingImage(f);
+
+      internalError = null;
+      file = processedImage.file;
+      revokePreviewUrl(preview);
+      preview = processedImage.previewUrl;
+    } catch (processingError) {
+      internalError =
+        processingError instanceof Error
+          ? processingError.message
+          : "No pudimos procesar la imagen seleccionada.";
+      file = null;
+      revokePreviewUrl(preview);
+      preview = null;
+    } finally {
+      isProcessing = false;
+      inputKey += 1;
+    }
   }
 
   function clearFile(e: MouseEvent) {
     e.stopPropagation();
+    if (isProcessing) return;
+
     file = null;
+    revokePreviewUrl(preview);
     preview = null;
     internalError = null;
-    if (inputRef) inputRef.value = "";
+    inputKey += 1;
   }
 
   function openFilePicker() {
-    inputRef?.click();
+    if (isProcessing) return;
+    document.getElementById(inputId)?.click();
   }
 
   function onDragEnter(e: DragEvent) {
     e.preventDefault();
+    if (isProcessing) return;
     isDragging = true;
   }
 
@@ -91,30 +124,35 @@
   function onDrop(e: DragEvent) {
     e.preventDefault();
     isDragging = false;
+    if (isProcessing) return;
     const files = e.dataTransfer?.files;
     if (files?.length) handleFiles(files);
   }
 
   function onInputChange(e: Event) {
+    if (isProcessing) return;
     const input = e.currentTarget as HTMLInputElement;
     if (input.files?.length) handleFiles(input.files);
   }
 </script>
 
-<div class="flex flex-col gap-1.5">
+<div class="flex w-full flex-col gap-1.5">
   <!-- Drop zone area -->
   <div
     role="button"
     tabindex="0"
     aria-label="Subir imagen"
-    class="group relative aspect-4/3 w-full cursor-pointer overflow-hidden rounded-2xl border-2 border-dashed transition-[border-color,background-color,transform] duration-150 select-none
-			{preview
+    aria-disabled={isProcessing}
+    class="group relative aspect-[4/3] w-full overflow-hidden rounded-2xl border-2 border-dashed transition-[border-color,background-color,transform,opacity] duration-150 select-none
+			{visiblePreview
       ? 'border-transparent bg-transparent'
       : isDragging
         ? 'scale-[1.01] border-primary bg-primary/8'
-        : 'border-border bg-muted/40'}"
+        : 'border-border bg-muted/40'}
+			{isProcessing ? 'cursor-progress opacity-80' : 'cursor-pointer'}"
     onclick={openFilePicker}
     onkeydown={(e) => {
+      if (isProcessing) return;
       if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
         openFilePicker();
@@ -125,28 +163,39 @@
     ondragover={onDragOver}
     ondrop={onDrop}
   >
-    {#if preview}
+    {#if visiblePreview}
       <!-- Preview state -->
       <img
-        src={preview}
+        src={visiblePreview}
         alt="Preview del sticker"
-        class="h-full w-full object-cover"
+        class="mx-auto h-full object-cover"
       />
 
-      <!-- Hover overlay with "Cambiar" button -->
       <div
-        class="absolute inset-0 flex items-end justify-center pb-3 opacity-0 transition-opacity duration-150 group-hover:opacity-100"
+        class={cn(
+          "absolute inset-0 flex items-end justify-center pb-3 transition-opacity duration-150",
+          isProcessing
+            ? "bg-black/35 opacity-100"
+            : "opacity-0 group-hover:opacity-100",
+        )}
       >
-        <button
-          onclick={clearFile}
-          class="flex items-center gap-1.5 rounded-xl bg-black/50 px-3 py-1.5 text-xs font-medium text-white backdrop-blur-sm transition-colors duration-150 hover:bg-black/70 active:scale-[0.96]"
-        >
-          <RefreshCwIcon class="size-3" />
-          Cambiar
-        </button>
+        {#if isProcessing}
+          <p
+            class="rounded-xl bg-black/60 px-3 py-1.5 text-xs font-medium text-white backdrop-blur-sm"
+          >
+            Procesando imagen
+          </p>
+        {:else}
+          <button
+            onclick={clearFile}
+            class="flex items-center gap-1.5 rounded-xl bg-black/50 px-3 py-1.5 text-xs font-medium text-white backdrop-blur-sm transition-colors duration-150 hover:bg-black/70 active:scale-[0.96]"
+          >
+            <RefreshCwIcon class="size-3" />
+            Cambiar
+          </button>
+        {/if}
       </div>
     {:else}
-      <!-- Empty / dragging state -->
       <div
         class="flex h-full flex-col items-center justify-center gap-2 px-4 text-center"
       >
@@ -163,10 +212,12 @@
         </div>
         <div>
           <p class="text-sm font-medium text-foreground">
-            Arrastra o haz clic para subir
+            {isProcessing
+              ? "Procesando imagen..."
+              : "Arrastra o haz clic para subir"}
           </p>
           <p class="mt-0.5 text-xs text-muted-foreground">
-            JPG · PNG · WEBP · Máx {maxSizeMb}MB
+            JPG · PNG · Máx {maxSizeMb}MB
           </p>
         </div>
       </div>
@@ -179,11 +230,14 @@
   {/if}
 
   <!-- Hidden file input -->
-  <input
-    bind:this={inputRef}
-    type="file"
-    accept={accept.join(",")}
-    onchange={onInputChange}
-    class="hidden"
-  />
+  {#key inputKey}
+    <input
+      id={inputId}
+      type="file"
+      accept={LISTING_IMAGE_ACCEPTED_TYPES.join(",")}
+      onchange={onInputChange}
+      disabled={isProcessing}
+      class="hidden"
+    />
+  {/key}
 </div>
