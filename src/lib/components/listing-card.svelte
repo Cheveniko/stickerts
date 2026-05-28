@@ -10,6 +10,7 @@
     getListingImageUrl,
   } from "$lib/utils";
   import { useCurrentUser } from "$lib/hooks/useCurrentUser.svelte";
+  import CollectorPassModal from "$lib/components/collector-pass-modal.svelte";
   import LoginModal from "$lib/components/login-modal.svelte";
   import PurchaseModal from "$lib/components/purchase-modal.svelte";
   import ArrowLeftRightIcon from "@lucide/svelte/icons/arrow-left-right";
@@ -57,16 +58,33 @@
 
   let purchaseOpen = $state(false);
   let loginOpen = $state(false);
+  let collectorPassOpen = $state(false);
 
   function handleCtaClick() {
     if (currentUser.status === "authenticated") {
-      purchaseOpen = true;
+      if (
+        currentUser.seller !== null ||
+        currentUser.user.freeSellerContactsRemaining > 0
+      ) {
+        purchaseOpen = true;
+        return;
+      }
+
+      collectorPassOpen = true;
       return;
     }
 
     if (currentUser.status === "anonymous") {
       loginOpen = true;
     }
+  }
+
+  function handleCollectorPassSuccess() {
+    collectorPassOpen = false;
+
+    setTimeout(() => {
+      purchaseOpen = true;
+    }, 300);
   }
 </script>
 
@@ -150,4 +168,8 @@
 </Card.Root>
 
 <PurchaseModal {listing} bind:open={purchaseOpen} />
+<CollectorPassModal
+  bind:open={collectorPassOpen}
+  onsuccess={handleCollectorPassSuccess}
+/>
 <LoginModal bind:open={loginOpen} />
