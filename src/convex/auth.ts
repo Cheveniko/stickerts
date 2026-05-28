@@ -56,7 +56,10 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
         return existingUser._id;
       }
 
-      return await ctx.db.insert("users", userFields);
+      return await ctx.db.insert("users", {
+        ...userFields,
+        freeSellerContactsRemaining: 2,
+      });
     },
   },
 });
