@@ -99,18 +99,18 @@
         <XIcon class="size-4" />
       </button>
 
-      <!-- Two-column layout -->
+      <!-- Responsive layout: stacked on mobile, two-column on desktop -->
       <div
-        class="flex h-[480px] max-h-[calc(100dvh-2rem)] sm:h-[520px] lg:h-[540px]"
+        class="flex flex-col h-[480px] max-h-[calc(100dvh-2rem)] sm:flex-row sm:h-[520px] lg:h-[540px]"
       >
-        <!-- LEFT RAIL -->
-        <div class="flex w-40 shrink-0 flex-col border-r p-3 sm:w-44">
-          <nav class="flex flex-1 flex-col gap-0.5">
+        <!-- RAIL: tab bar on mobile (top), sidebar on desktop (left) -->
+        <div class="flex flex-row border-b pr-12 p-2 sm:w-44 sm:shrink-0 sm:flex-col sm:border-b-0 sm:border-r sm:p-3 sm:pr-3">
+          <nav class="flex flex-1 flex-row gap-1 sm:flex-col sm:gap-0.5">
             <!-- Profile button -->
             <button
               disabled={signingOut}
               class={[
-                "flex w-full items-center gap-2.5 rounded-2xl px-3 py-2 text-sm font-medium transition-colors duration-150 disabled:pointer-events-none disabled:opacity-50",
+                "flex items-center gap-2.5 rounded-2xl px-3 py-2.5 text-sm font-medium transition-colors duration-150 disabled:pointer-events-none disabled:opacity-50 sm:w-full sm:py-2",
                 activeSection === "profile"
                   ? "bg-muted text-foreground"
                   : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
@@ -125,7 +125,7 @@
             <button
               disabled={signingOut}
               class={[
-                "flex w-full items-center gap-2.5 rounded-2xl px-3 py-2 text-sm font-medium transition-colors duration-150 disabled:pointer-events-none disabled:opacity-50",
+                "flex items-center gap-2.5 rounded-2xl px-3 py-2.5 text-sm font-medium transition-colors duration-150 disabled:pointer-events-none disabled:opacity-50 sm:w-full sm:py-2",
                 activeSection === "stickers"
                   ? "bg-muted text-foreground"
                   : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
@@ -137,8 +137,8 @@
             </button>
           </nav>
 
-          <!-- Sign out area -->
-          <div class="mt-auto border-t pt-2">
+          <!-- Sign out: desktop sidebar only -->
+          <div class="hidden sm:block mt-auto border-t pt-2">
             <button
               disabled={signingOut}
               class="flex w-full items-center gap-2.5 rounded-2xl px-3 py-2 text-sm font-medium text-destructive transition-colors duration-150 hover:bg-destructive/10 active:scale-[0.96] disabled:pointer-events-none disabled:opacity-50"
@@ -155,8 +155,8 @@
           </div>
         </div>
 
-        <!-- RIGHT PANEL -->
-        <div class="flex-1 overflow-y-auto p-6 pt-8">
+        <!-- CONTENT PANEL -->
+        <div class="flex-1 overflow-y-auto p-4 pt-5 sm:p-6 sm:pt-8">
           {#if activeSection === "profile"}
             <div class="">
               <ProfileSettings {user} />
@@ -172,6 +172,23 @@
             </div>
           {:else}
             <StickersSettings />
+          {/if}
+        </div>
+
+        <!-- Sign out footer: mobile only -->
+        <div class="border-t p-2 sm:hidden">
+          <button
+            disabled={signingOut}
+            class="flex w-full items-center gap-2.5 rounded-2xl px-3 py-2.5 text-sm font-medium text-destructive transition-colors duration-150 hover:bg-destructive/10 active:scale-[0.96] disabled:pointer-events-none disabled:opacity-50"
+            onclick={handleSignOut}
+          >
+            <LogOutIcon class="size-4 shrink-0" />
+            {signingOut ? "Saliendo" : "Cerrar sesión"}
+          </button>
+          {#if signOutError}
+            <p role="alert" class="mt-2 px-3 text-sm text-destructive">
+              {signOutError}
+            </p>
           {/if}
         </div>
       </div>
