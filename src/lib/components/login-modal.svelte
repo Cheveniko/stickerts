@@ -176,12 +176,12 @@
                 Revisa tu correo
               </h2>
               <p class="text-sm text-balance text-muted-foreground">
-                Te enviamos un enlace mágico a
+                Te enviamos un enlace a
                 <span class="font-semibold text-foreground">
                   {email}
                 </span>.
                 <br />
-                Haz clic en él para completar tu registro.
+                Haz click en él para completar tu registro.
               </p>
             </div>
             <Button

@@ -48,9 +48,11 @@
         Ajustes
       </button>
     {:else if currentUser.status === "anonymous"}
-      <Button onclick={() => (loginOpen = true)}>{m.nav_sell()}</Button>
+      <Button onclick={() => (loginOpen = true)}>
+        {m.nav_sell()}
+      </Button>
     {:else}
-      <div class="w-[90px]" aria-hidden="true"></div>
+      <div class="w-[98px]" aria-hidden="true"></div>
     {/if}
   </div>
 </header>
