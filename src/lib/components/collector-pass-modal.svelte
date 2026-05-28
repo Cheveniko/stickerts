@@ -19,8 +19,8 @@
   import { onDestroy } from "svelte";
   import { useConvexClient } from "convex-svelte";
 
-  type Props = { open: boolean };
-  let { open = $bindable() }: Props = $props();
+  type Props = { open: boolean; onsuccess?: () => void };
+  let { open = $bindable(), onsuccess }: Props = $props();
   const convex = useConvexClient();
 
   const benefits = [
@@ -103,6 +103,7 @@
         {},
       );
 
+      checkoutState = { kind: "ready" };
       return result.orderId;
     } catch (error) {
       checkoutState = {
@@ -129,6 +130,8 @@
       );
 
       checkoutState = { kind: "success" };
+      onsuccess?.();
+      close();
 
       try {
         await invalidateAll();
@@ -170,7 +173,6 @@
     if (
       checkoutState.kind !== "success" &&
       checkoutState.kind !== "error" &&
-      checkoutState.kind !== "creating_order" &&
       checkoutState.kind !== "capturing_order"
     ) {
       checkoutState = { kind: "ready" };
@@ -283,60 +285,47 @@
 
         <!-- CTA -->
         <div class="flex flex-col gap-2">
-          {#if checkoutState.kind === "success"}
+          {#if checkoutState.kind !== "error"}
             <div
-              role="status"
-              aria-live="polite"
-              class="rounded-2xl border border-primary/20 bg-primary/10 px-4 py-3 text-center"
-            >
-              <p class="text-sm font-medium text-primary">{statusMessage}</p>
-              <p class="mt-1 text-xs text-muted-foreground">
-                Ya puedes publicar y vender tus cromos.
-              </p>
-            </div>
-          {:else}
-            {#if checkoutState.kind !== "error"}
-              <div
-                class="min-h-[44px] rounded-2xl"
-                {@attach paypalButtonsAttachment({
-                  clientId: env.PUBLIC_PAYPAL_CLIENT_ID,
-                  createOrder,
-                  onApprove,
-                  onError: onPayPalError,
-                  onCancel: safelyResetPayPalState,
-                  onLoading: () => {
-                    checkoutState = { kind: "initializing_paypal" };
-                  },
-                  onReady: safelyResetPayPalState,
-                })}
-              ></div>
-            {/if}
+              class="min-h-[44px] rounded-2xl"
+              {@attach paypalButtonsAttachment({
+                clientId: env.PUBLIC_PAYPAL_CLIENT_ID,
+                createOrder,
+                onApprove,
+                onError: onPayPalError,
+                onCancel: safelyResetPayPalState,
+                onLoading: () => {
+                  checkoutState = { kind: "initializing_paypal" };
+                },
+                onReady: safelyResetPayPalState,
+              })}
+            ></div>
+          {/if}
 
-            {#if checkoutState.kind === "error"}
-              <div class="flex flex-col gap-2">
-                <p
-                  role="alert"
-                  class="text-center text-xs text-pretty text-destructive"
-                >
-                  {statusMessage}
-                </p>
-                <Button
-                  type="button"
-                  variant="outline"
-                  class="w-full duration-150 active:scale-[0.96]"
-                  onclick={retry}
-                >
-                  Reintentar
-                </Button>
-              </div>
-            {:else if checkoutState.kind === "creating_order"}
+          {#if checkoutState.kind === "error"}
+            <div class="flex flex-col gap-2">
               <p
-                aria-live="polite"
-                class="text-center text-xs text-pretty text-muted-foreground"
+                role="alert"
+                class="text-center text-xs text-pretty text-destructive"
               >
                 {statusMessage}
               </p>
-            {/if}
+              <Button
+                type="button"
+                variant="outline"
+                class="w-full duration-150 active:scale-[0.96]"
+                onclick={retry}
+              >
+                Reintentar
+              </Button>
+            </div>
+          {:else if checkoutState.kind === "creating_order"}
+            <p
+              aria-live="polite"
+              class="text-center text-xs text-pretty text-muted-foreground"
+            >
+              {statusMessage}
+            </p>
           {/if}
         </div>
       </div>

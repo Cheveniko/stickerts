@@ -3,6 +3,9 @@
   import ChevronRightIcon from "@lucide/svelte/icons/chevron-right";
   import CollectorPassModal from "./collector-pass-modal.svelte";
 
+  type Props = { onsuccess?: () => void };
+  let { onsuccess }: Props = $props();
+
   let open = $state(false);
 </script>
 
@@ -38,4 +41,4 @@
   </button>
 </div>
 
-<CollectorPassModal bind:open />
+<CollectorPassModal bind:open {onsuccess} />

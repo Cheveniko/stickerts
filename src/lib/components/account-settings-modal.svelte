@@ -14,6 +14,7 @@
   import SellerSettings from "./seller-settings.svelte";
   import Separator from "./ui/separator/separator.svelte";
   import CollectorPassCallout from "./collector-pass-callout.svelte";
+  import SellerSuccessModal from "./seller-success-modal.svelte";
 
   type Props = { user: User; seller: CurrentSeller | null; open: boolean };
 
@@ -22,6 +23,7 @@
   let activeSection = $state<"profile" | "stickers">("profile");
   let signingOut = $state(false);
   let signOutError = $state<string | null>(null);
+  let sellerSuccessOpen = $state(false);
 
   const auth = useAuth();
   function close(force = false) {
@@ -169,7 +171,7 @@
               {#if seller}
                 <SellerSettings {seller} />
               {:else}
-                <CollectorPassCallout />
+                <CollectorPassCallout onsuccess={() => (sellerSuccessOpen = true)} />
               {/if}
             </div>
           {:else}
@@ -197,3 +199,5 @@
     </div>
   </div>
 {/if}
+
+<SellerSuccessModal bind:open={sellerSuccessOpen} />
