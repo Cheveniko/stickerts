@@ -340,7 +340,7 @@
             onclick={sendMessage}
           >
             {#if isSending}
-              Enviando...
+              Enviando
             {:else if submitSuccess}
               Mensaje enviado
             {:else}
