@@ -20,10 +20,10 @@
   >
     <div class="flex items-center gap-3">
       <div
-        class="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10"
+        class="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary dark:bg-primary/10"
       >
         <TicketIcon
-          class="size-4 text-primary"
+          class="size-4 text-primary-foreground/80 dark:text-primary"
           style="transform: rotate(-45deg)"
         />
       </div>
