@@ -57,8 +57,9 @@
         target="_blank"
         rel="noopener noreferrer"
         class="text-xs text-muted-foreground transition-colors hover:text-foreground"
-        >Codeline.ai</a
       >
+        Codeline.ai
+      </a>
     </div>
   </div>
 </footer>
