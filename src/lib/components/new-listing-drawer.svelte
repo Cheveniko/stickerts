@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount } from "svelte";
   import { fade } from "svelte/transition";
   import { expoOut } from "svelte/easing";
   import { closeOnEscapeHandler, lockScroll } from "$lib/utils";
@@ -18,6 +19,7 @@
   let open = $state(false);
   let isSubmitting = $state(false);
   let publishMore = $state(false);
+  let bottomOffset = $state(24);
 
   const closeOnEscape = closeOnEscapeHandler(() => open, close);
 
@@ -29,6 +31,24 @@
   function onFormSuccess() {
     if (!publishMore) close();
   }
+
+  onMount(() => {
+    const footer = document.querySelector("footer");
+    if (!footer) return;
+
+    function updateOffset() {
+      const rect = footer!.getBoundingClientRect();
+      const footerVisible = Math.max(0, window.innerHeight - rect.top);
+      bottomOffset = footerVisible + 24;
+    }
+
+    window.addEventListener("scroll", updateOffset, { passive: true });
+    updateOffset();
+
+    return () => {
+      window.removeEventListener("scroll", updateOffset);
+    };
+  });
 
   function slideRight(
     _node: Element,
@@ -47,7 +67,8 @@
 <!-- FAB Button -->
 <button
   aria-label="Publicar cromo"
-  class="fixed right-6 bottom-6 z-40 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-[transform,box-shadow,filter] duration-150 hover:scale-[1.04] hover:brightness-105 active:scale-[0.96]"
+  class="fixed right-6 z-40 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-[transform,box-shadow,filter] duration-150 hover:scale-[1.04] hover:brightness-105 active:scale-[0.96]"
+  style="bottom: {bottomOffset}px"
   onclick={() => (open = true)}
 >
   <PlusIcon class="size-6" />
@@ -127,7 +148,7 @@
           disabled={isSubmitting}
           class="duration-150 active:scale-[0.96]"
         >
-          {isSubmitting ? "Publicando..." : "Publicar"}
+          {isSubmitting ? "Publicando" : "Publicar"}
         </Button>
       </div>
     </div>

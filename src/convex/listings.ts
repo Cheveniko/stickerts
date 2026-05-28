@@ -17,6 +17,12 @@ export type ListingWithRelations = Listing & {
 
 const CURRENCY_REGEX = /^[A-Z]{3}$/;
 
+const listingIntentValidator = v.union(
+  v.literal("sale"),
+  v.literal("trade"),
+  v.literal("sale_or_trade"),
+);
+
 function normalizeCurrency(currency: string) {
   const normalizedCurrency = currency.trim().toUpperCase();
 
@@ -50,6 +56,14 @@ function normalizeQuantityAvailable(quantityAvailable: number) {
   }
 
   return quantityAvailable;
+}
+
+function normalizeTradeDescription(tradeDescription: string | undefined) {
+  if (tradeDescription === undefined || tradeDescription === "") {
+    return undefined;
+  }
+
+  return tradeDescription;
 }
 
 async function enrichListing(
@@ -98,10 +112,13 @@ export const createListing = mutation({
   args: {
     stickerId: v.id("stickers"),
     citySlug: v.string(),
-    currency: v.string(),
+    currency: v.optional(v.string()),
     imageKey: v.string(),
-    priceCents: v.number(),
+    intent: listingIntentValidator,
+    priceCents: v.optional(v.number()),
     quantityAvailable: v.number(),
+    tradeDescription: v.optional(v.string()),
+    wantedStickerIds: v.optional(v.array(v.id("stickers"))),
   },
   handler: async (ctx, args) => {
     const userId = await requireAuthUserId(ctx);
@@ -133,12 +150,40 @@ export const createListing = mutation({
       });
     }
 
-    const priceCents = normalizePriceCents(args.priceCents);
+    const isForSale = args.intent === "sale" || args.intent === "sale_or_trade";
+    const isForTrade =
+      args.intent === "trade" || args.intent === "sale_or_trade";
     const quantityAvailable = normalizeQuantityAvailable(
       args.quantityAvailable,
     );
-    const currency = normalizeCurrency(args.currency);
+    const tradeDescription = isForTrade
+      ? normalizeTradeDescription(args.tradeDescription)
+      : undefined;
+    const wantedStickerIds = isForTrade
+      ? [...new Set(args.wantedStickerIds ?? [])]
+      : [];
     const imageKeyPrefix = `listings/${seller._id}/`;
+    let priceCents: number | undefined;
+    let currency: string | undefined;
+
+    if (isForSale) {
+      if (args.priceCents === undefined) {
+        throw new ConvexError({
+          code: "INVALID_PRICE",
+          message: "Debes indicar un precio si publicas el cromo para venta.",
+        });
+      }
+
+      if (!args.currency) {
+        throw new ConvexError({
+          code: "INVALID_CURRENCY",
+          message: "Debes indicar una moneda si publicas el cromo para venta.",
+        });
+      }
+
+      priceCents = normalizePriceCents(args.priceCents);
+      currency = normalizeCurrency(args.currency);
+    }
 
     if (!args.imageKey.startsWith(imageKeyPrefix)) {
       throw new ConvexError({
@@ -147,17 +192,41 @@ export const createListing = mutation({
       });
     }
 
-    return await ctx.db.insert("listings", {
+    if (wantedStickerIds.length > 0) {
+      const wantedStickers = await Promise.all(
+        wantedStickerIds.map((wantedStickerId) => ctx.db.get(wantedStickerId)),
+      );
+
+      if (wantedStickers.some((wantedSticker) => !wantedSticker?.isActive)) {
+        throw new ConvexError({
+          code: "WANTED_STICKER_NOT_FOUND",
+          message: "Uno de los cromos solicitados para intercambio no existe.",
+        });
+      }
+    }
+
+    const listingId = await ctx.db.insert("listings", {
       stickerId: args.stickerId,
       sellerId: seller._id,
       citySlug: city.slug,
+      intent: args.intent,
       currency,
       imageKey: args.imageKey,
       priceCents,
       quantityAvailable,
       quantitySold: 0,
       status: "active",
+      tradeDescription,
       updatedAt: Date.now(),
     });
+
+    for (const wantedStickerId of wantedStickerIds) {
+      await ctx.db.insert("listingTradeWants", {
+        listingId,
+        wantedStickerId,
+      });
+    }
+
+    return listingId;
   },
 });

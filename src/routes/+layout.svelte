@@ -6,6 +6,8 @@
     setupCurrentUser,
     useCurrentUser,
   } from "$lib/hooks/useCurrentUser.svelte";
+  import { dev } from "$app/environment";
+  import { injectAnalytics } from "@vercel/analytics/sveltekit";
   import favicon from "$lib/assets/favicon.svg";
   import { ModeWatcher } from "mode-watcher";
   import Navbar from "$lib/components/navbar.svelte";
@@ -13,6 +15,7 @@
   import NewListingDrawer from "$lib/components/new-listing-drawer.svelte";
 
   let { children, data } = $props();
+  injectAnalytics({ mode: dev ? "development" : "production" });
 
   setupConvexAuth({
     convexUrl: PUBLIC_CONVEX_URL,

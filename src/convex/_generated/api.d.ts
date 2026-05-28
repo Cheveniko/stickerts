@@ -16,7 +16,6 @@ import type * as listings from "../listings.js";
 import type * as locationSeed from "../locationSeed.js";
 import type * as purchaseInquiries from "../purchaseInquiries.js";
 import type * as resend from "../resend.js";
-import type * as seed from "../seed.js";
 import type * as sellers from "../sellers.js";
 import type * as stickers from "../stickers.js";
 import type * as users from "../users.js";
@@ -36,7 +35,6 @@ declare const fullApi: ApiFromModules<{
   locationSeed: typeof locationSeed;
   purchaseInquiries: typeof purchaseInquiries;
   resend: typeof resend;
-  seed: typeof seed;
   sellers: typeof sellers;
   stickers: typeof stickers;
   users: typeof users;

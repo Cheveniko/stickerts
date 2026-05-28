@@ -162,7 +162,7 @@
           if (e.key === "Enter") saveUsername();
           if (e.key === "Escape") cancelUsername();
         }}
-        class="-mx-1 mt-0.5 w-full min-w-0 rounded-sm border-0 bg-transparent px-1 py-0.5 text-sm font-semibold ring-1 ring-ring outline-none"
+        class="-mx-1 mt-0.5 w-full min-w-0 rounded-sm border-0 bg-transparent px-1 py-0.5 font-semibold ring-1 ring-ring outline-none xs:text-sm"
         {@attach (node) => node.focus()}
       />
     {:else}

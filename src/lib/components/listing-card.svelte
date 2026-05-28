@@ -10,6 +10,7 @@
     getListingImageUrl,
   } from "$lib/utils";
   import PurchaseModal from "$lib/components/purchase-modal.svelte";
+  import ArrowLeftRightIcon from "@lucide/svelte/icons/arrow-left-right";
 
   type Props = {
     listing: ListingWithRelations;
@@ -18,12 +19,22 @@
   const { listing }: Props = $props();
 
   let listingPrice = $derived(
-    formatMoney({
-      amount: listing.priceCents,
-      currency: listing.currency,
-      currencySymbol: listing.city.currencySymbol,
-      locale: getLocale(),
-    }),
+    listing.priceCents !== undefined && listing.currency !== undefined
+      ? formatMoney({
+          amount: listing.priceCents,
+          currency: listing.currency,
+          currencySymbol: listing.city.currencySymbol,
+          locale: getLocale(),
+        })
+      : null,
+  );
+
+  const ctaLabel = $derived(
+    listing.intent === "sale"
+      ? m.listing_buy()
+      : listing.intent === "trade"
+        ? "Intercambiar"
+        : "Contactar",
   );
 
   let listingCity = $derived(
@@ -83,34 +94,42 @@
     </Card.Description>
   </Card.Content>
 
-  <Card.Footer
-    class="flex flex-col items-stretch gap-2 px-3 pt-2 pb-3 sm:flex-row sm:items-end sm:justify-between sm:pt-2.5"
-  >
-    <!-- Mobile: avatar (left) + price (right); desktop: dissolves into flex row -->
-    <div class="flex items-center justify-between sm:contents">
+  <Card.Footer class="flex flex-col items-stretch gap-2.5 px-3 pt-2 pb-3">
+    <!-- Info row: avatar (left) + price / intent indicator (right) -->
+    <div class="flex items-center justify-between">
       <div
         class="flex size-5 shrink-0 items-center justify-center rounded-full bg-muted text-[9px] font-bold text-muted-foreground ring-1 ring-black/10 dark:ring-white/10"
         title={listing.sellerName}
       >
         {getInitial(listing.sellerName)}
       </div>
-      <span class="text-sm font-bold text-foreground tabular-nums sm:hidden">
-        {listingPrice}
-      </span>
+
+      {#if listing.intent === "sale"}
+        <span class="text-sm font-bold text-foreground tabular-nums">
+          {listingPrice}
+        </span>
+      {:else if listing.intent === "trade"}
+        <span class="flex items-center gap-1 text-sm font-medium">
+          <ArrowLeftRightIcon class="size-3.5" />
+          Intercambio
+        </span>
+      {:else}
+        <span
+          class="flex items-center gap-1.5 text-sm font-bold text-foreground tabular-nums"
+        >
+          {listingPrice}
+          <ArrowLeftRightIcon class="size-3" />
+        </span>
+      {/if}
     </div>
 
-    <!-- Mobile: full-width buy button; desktop: price + button -->
-    <div class="flex shrink-0 items-center gap-2">
-      <span class="hidden text-sm font-bold text-foreground tabular-nums sm:block">
-        {listingPrice}
-      </span>
-      <button
-        onclick={() => (modalOpen = true)}
-        class="flex-1 rounded-xl bg-primary px-3 py-2.5 text-xs font-semibold text-primary-foreground [transition-property:transform] duration-150 hover:brightness-105 active:scale-[0.96] sm:flex-none sm:py-1.5"
-      >
-        {m.listing_buy()}
-      </button>
-    </div>
+    <!-- CTA button: full width -->
+    <button
+      onclick={() => (modalOpen = true)}
+      class="w-full rounded-xl bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground [transition-property:transform] duration-150 hover:brightness-105 active:scale-[0.96]"
+    >
+      {ctaLabel}
+    </button>
   </Card.Footer>
 </Card.Root>
 

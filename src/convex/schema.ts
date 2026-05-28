@@ -18,6 +18,12 @@ const listingStatusValidator = v.union(
   v.literal("removed"),
 );
 
+const listingIntentValidator = v.union(
+  v.literal("sale"),
+  v.literal("trade"),
+  v.literal("sale_or_trade"),
+);
+
 const sellerStatusValidator = v.union(
   v.literal("active"),
   v.literal("paused"),
@@ -91,8 +97,10 @@ export default defineSchema({
     stickerId: v.id("stickers"),
     sellerId: v.id("sellers"),
     citySlug: v.string(),
-    priceCents: v.number(),
-    currency: v.string(),
+    intent: listingIntentValidator,
+    priceCents: v.optional(v.number()),
+    currency: v.optional(v.string()),
+    tradeDescription: v.optional(v.string()),
     imageKey: v.string(),
     quantityAvailable: v.number(),
     quantitySold: v.number(),
@@ -108,6 +116,17 @@ export default defineSchema({
       "stickerId",
     ])
     .index("by_sellerId_and_status", ["sellerId", "status"]),
+
+  listingTradeWants: defineTable({
+    listingId: v.id("listings"),
+    wantedStickerId: v.id("stickers"),
+  })
+    .index("by_listingId", ["listingId"])
+    .index("by_wantedStickerId", ["wantedStickerId"])
+    .index("by_listingId_and_wantedStickerId", [
+      "listingId",
+      "wantedStickerId",
+    ]),
 
   purchaseInquiries: defineTable({
     listingId: v.id("listings"),

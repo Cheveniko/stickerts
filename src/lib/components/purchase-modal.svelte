@@ -37,6 +37,25 @@
   let submitSuccess = $state(false);
   let localCooldownVersion = $state(0);
 
+  const modalSubtitle = $derived(
+    listing.intent === "sale"
+      ? "Envía tus datos al vendedor para coordinar la compra."
+      : listing.intent === "trade"
+        ? "Envía tus datos al vendedor para coordinar el intercambio."
+        : "Envía tus datos al vendedor para comprar o intercambiar.",
+  );
+
+  const messagePrefill = $derived(
+    listing.intent === "trade"
+      ? (channel: string) =>
+          `Hola ${listing.sellerName}, quiero intercambiar mi cromo por el tuyo (${listing.sticker.label}${listing.sticker.code ? ` - ${listing.sticker.code}` : ""}). Por favor contáctame vía ${channel} a: `
+      : listing.intent === "sale_or_trade"
+        ? (channel: string) =>
+            `Hola ${listing.sellerName}, me interesa tu cromo ${listing.sticker.label}${listing.sticker.code ? ` - ${listing.sticker.code}` : ""}. Por favor contáctame vía ${channel} a: `
+        : (channel: string) =>
+            `Hola ${listing.sellerName}, quiero comprar tu cromo ${listing.sticker.label}${listing.sticker.code ? ` - ${listing.sticker.code}` : ""}. Por favor contáctame vía ${channel} a: `,
+  );
+
   let trimmedMessage = $derived(message.trim());
   let messageTooLong = $derived(message.length > MAX_MESSAGE_LENGTH);
   let localCooldownUntil = $derived.by(() => {
@@ -139,11 +158,7 @@
 
   function selectOption(option: { id: ContactOption; label: string }) {
     selectedOption = option.id;
-    const stickerLabel = listing.sticker.label;
-    const stickerCode = listing.sticker.code
-      ? ` - ${listing.sticker.code}`
-      : "";
-    const prefill = `Hola ${listing.sellerName}, quiero comprar tu cromo ${stickerLabel}${stickerCode}. Por favor contáctame vía ${option.label} a: `;
+    const prefill = messagePrefill(option.label);
     message = prefill;
 
     const len = prefill.length;
@@ -230,10 +245,11 @@
         <div class="flex items-start justify-between gap-4">
           <div class="flex min-w-0 flex-col gap-0.5">
             <h2 id="purchase-modal-title" class="font-semibold text-balance">
+              {listing.sticker.code}
               {listing.sticker.label}
             </h2>
             <p class="text-sm text-muted-foreground">
-              Envía tus datos al vendedor para coordinar la compra.
+              {modalSubtitle}
             </p>
           </div>
           <button
