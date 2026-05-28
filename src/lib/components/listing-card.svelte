@@ -83,21 +83,30 @@
     </Card.Description>
   </Card.Content>
 
-  <Card.Footer class="items-end justify-between gap-2 px-3 pt-2.5 pb-3">
-    <div
-      class="flex size-5 shrink-0 items-center justify-center rounded-full bg-muted text-[9px] font-bold text-muted-foreground ring-1 ring-black/10 dark:ring-white/10"
-      title={listing.sellerName}
-    >
-      {getInitial(listing.sellerName)}
+  <Card.Footer
+    class="flex flex-col items-stretch gap-2 px-3 pt-2 pb-3 sm:flex-row sm:items-end sm:justify-between sm:pt-2.5"
+  >
+    <!-- Mobile: avatar (left) + price (right); desktop: dissolves into flex row -->
+    <div class="flex items-center justify-between sm:contents">
+      <div
+        class="flex size-5 shrink-0 items-center justify-center rounded-full bg-muted text-[9px] font-bold text-muted-foreground ring-1 ring-black/10 dark:ring-white/10"
+        title={listing.sellerName}
+      >
+        {getInitial(listing.sellerName)}
+      </div>
+      <span class="text-sm font-bold text-foreground tabular-nums sm:hidden">
+        {listingPrice}
+      </span>
     </div>
 
+    <!-- Mobile: full-width buy button; desktop: price + button -->
     <div class="flex shrink-0 items-center gap-2">
-      <span class="text-sm font-bold text-foreground tabular-nums">
+      <span class="hidden text-sm font-bold text-foreground tabular-nums sm:block">
         {listingPrice}
       </span>
       <button
         onclick={() => (modalOpen = true)}
-        class="shrink-0 rounded-xl bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground [transition-property:transform] duration-150 hover:brightness-105 active:scale-[0.96]"
+        class="flex-1 rounded-xl bg-primary px-3 py-2.5 text-xs font-semibold text-primary-foreground [transition-property:transform] duration-150 hover:brightness-105 active:scale-[0.96] sm:flex-none sm:py-1.5"
       >
         {m.listing_buy()}
       </button>

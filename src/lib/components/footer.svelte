@@ -20,28 +20,32 @@
 </script>
 
 <footer class="border-t bg-background">
-  <div class="flex h-14 items-center justify-between px-4 md:px-8">
-    <!-- Left: Brand -->
-    <span class="shrink-0 text-sm font-bold">Stickerts</span>
+  <div
+    class="flex flex-wrap items-center gap-x-2 gap-y-2.5 px-4 py-3.5 sm:h-14 sm:flex-nowrap sm:justify-between sm:py-0 md:px-8"
+  >
+    <!-- Brand: always first, left -->
+    <span class="order-1 shrink-0 text-sm font-bold">Stickerts</span>
 
-    <!-- Center: Legal links -->
-    <div class="flex items-center gap-2 text-xs text-muted-foreground">
-      <a href="/terms" class="transition-colors hover:text-foreground"
-        >{m.footer_terms()}</a
-      >
+    <!-- Legal links: wraps to second row on mobile (order-3 + w-full), center on desktop -->
+    <div
+      class="order-3 flex w-full items-center gap-1.5 text-xs text-muted-foreground sm:order-2 sm:w-auto"
+    >
+      <a href="/terms" class="-m-1 p-1 transition-colors hover:text-foreground">
+        {m.footer_terms()}
+      </a>
       <span aria-hidden="true">·</span>
-      <a href="/privacy" class="transition-colors hover:text-foreground"
-        >{m.footer_privacy()}</a
-      >
+      <a href="/privacy" class="-m-1 p-1 transition-colors hover:text-foreground">
+        {m.footer_privacy()}
+      </a>
     </div>
 
-    <!-- Right: Theme toggle + attribution -->
-    <div class="flex items-center gap-3">
+    <!-- Theme toggle + attribution: pushed right on mobile (ml-auto), right on desktop -->
+    <div class="order-2 ml-auto flex items-center gap-3 sm:order-3 sm:ml-0">
       <button
         onclick={cycleMode}
         aria-label={modeLabel}
         title={modeLabel}
-        class="text-muted-foreground transition-colors hover:text-foreground"
+        class="p-2 text-muted-foreground transition-colors hover:text-foreground"
       >
         {#if userPrefersMode.current === "light"}
           <Sun class="size-4" />
@@ -56,7 +60,7 @@
         href="https://codeline.ai"
         target="_blank"
         rel="noopener noreferrer"
-        class="text-xs text-muted-foreground transition-colors hover:text-foreground"
+        class="-m-1 p-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
       >
         Codeline.ai
       </a>
