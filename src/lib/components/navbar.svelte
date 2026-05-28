@@ -16,7 +16,7 @@
 
 <header
   class={cn(
-    "fixed inset-x-0 top-0 z-50 flex h-14 items-center justify-between gap-4 border bg-background pr-2 pl-4 backdrop-blur-sm md:top-8 md:right-auto md:left-1/2 md:w-[700px] md:-translate-x-1/2 md:rounded-full lg:w-[1000px]",
+    "fixed inset-x-0 top-0 z-50 flex h-14 items-center justify-between gap-4 border-b bg-background pr-2 pl-4 backdrop-blur-sm md:border md:top-8 md:right-auto md:left-1/2 md:w-[700px] md:-translate-x-1/2 md:rounded-full lg:w-[1000px]",
   )}
 >
   <span class="shrink-0 text-lg font-bold">Stickerts</span>
@@ -38,7 +38,7 @@
     {#if currentUser.status === "authenticated"}
       <button
         onclick={() => (settingsOpen = true)}
-        class="flex items-center gap-1.5 rounded-full border border-border bg-background px-2 py-1 text-sm font-medium transition-[background-color,transform] duration-150 hover:bg-muted active:scale-[0.96]"
+        class="flex items-center gap-1.5 rounded-full border border-border bg-background px-2 py-1.5 text-sm font-medium transition-[background-color,transform] duration-150 hover:bg-muted active:scale-[0.96]"
       >
         <Avatar.Root size="sm" class="after:border-0">
           <Avatar.Fallback>
