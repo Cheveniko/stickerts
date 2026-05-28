@@ -1,15 +1,27 @@
 <script lang="ts">
+  import { invalidateAll } from "$app/navigation";
+  import { env } from "$env/dynamic/public";
+  import { api } from "$convex/_generated/api";
   import { fade, fly } from "svelte/transition";
   import { cubicOut } from "svelte/easing";
+  import {
+    getErrorMessage,
+    paypalButtonsAttachment,
+    type CollectorPassState,
+    type PayPalOnApproveData,
+  } from "$lib/paypal";
   import { closeOnEscapeHandler, lockScroll } from "$lib/utils";
   import { Button } from "$lib/components/ui/button/index.js";
   import CheckIcon from "@lucide/svelte/icons/check";
   import TicketIcon from "@lucide/svelte/icons/ticket";
   import SparklesIcon from "@lucide/svelte/icons/sparkles";
   import XIcon from "@lucide/svelte/icons/x";
+  import { onDestroy } from "svelte";
+  import { useConvexClient } from "convex-svelte";
 
   type Props = { open: boolean };
   let { open = $bindable() }: Props = $props();
+  const convex = useConvexClient();
 
   const benefits = [
     "Contáctate con los dueños de cromos",
@@ -17,11 +29,159 @@
     "Recibe mensajes directos de compradores",
   ];
 
+  const CLOSE_TRANSITION_MS = 300;
+
+  let checkoutState = $state<CollectorPassState>({ kind: "idle" });
+
+  let closeTimeout: ReturnType<typeof setTimeout> | null = null;
+
+  let isBusy = $derived(
+    checkoutState.kind === "creating_order" ||
+      checkoutState.kind === "capturing_order",
+  );
+
+  let statusMessage = $derived.by(() => {
+    switch (checkoutState.kind) {
+      case "initializing_paypal":
+        return "Cargando PayPal";
+      case "creating_order":
+        return "Preparando tu orden";
+      case "capturing_order":
+        return "Confirmando tu pago";
+      case "ready":
+        return "Paga de forma segura con PayPal.";
+      case "success":
+        return "¡Pago completado! Tu Pase de Coleccionista ya está activo.";
+      case "error":
+        return checkoutState.message;
+      default:
+        return "";
+    }
+  });
+
+  function clearCloseTimeout() {
+    if (closeTimeout) {
+      clearTimeout(closeTimeout);
+      closeTimeout = null;
+    }
+  }
+
+  function canDismiss() {
+    return !isBusy;
+  }
+
   function close() {
+    if (!canDismiss()) {
+      return;
+    }
+
+    clearCloseTimeout();
     open = false;
+    closeTimeout = setTimeout(() => {
+      closeTimeout = null;
+
+      if (!open) {
+        checkoutState = { kind: "idle" };
+      }
+    }, CLOSE_TRANSITION_MS);
+  }
+
+  function retry() {
+    if (!open || isBusy) {
+      return;
+    }
+
+    checkoutState = { kind: "idle" };
+  }
+
+  async function createOrder() {
+    checkoutState = { kind: "creating_order" };
+
+    try {
+      const result = await convex.action(
+        api.collectorPassPurchases.createCollectorPassOrder,
+        {},
+      );
+
+      return result.orderId;
+    } catch (error) {
+      checkoutState = {
+        kind: "error",
+        source: "checkout",
+        message: getErrorMessage(
+          error,
+          "No pudimos crear tu orden de PayPal. Intenta de nuevo.",
+        ),
+      };
+      throw error;
+    }
+  }
+
+  async function onApprove(data: PayPalOnApproveData) {
+    checkoutState = { kind: "capturing_order" };
+
+    try {
+      await convex.action(
+        api.collectorPassPurchases.captureCollectorPassOrder,
+        {
+          paypalOrderId: data.orderID,
+        },
+      );
+
+      checkoutState = { kind: "success" };
+
+      try {
+        await invalidateAll();
+      } catch (error) {
+        console.error(
+          "[collector-pass-modal] Failed to refresh page data",
+          error,
+        );
+      }
+    } catch (error) {
+      checkoutState = {
+        kind: "error",
+        source: "checkout",
+        message: getErrorMessage(
+          error,
+          "No pudimos confirmar tu pago. Si PayPal mostró un cobro, contacta soporte.",
+        ),
+      };
+      throw error;
+    }
+  }
+
+  function onPayPalError(error: unknown) {
+    if (checkoutState.kind === "error") {
+      return;
+    }
+
+    checkoutState = {
+      kind: "error",
+      source: "checkout",
+      message: getErrorMessage(
+        error,
+        "Ocurrió un error con PayPal. Intenta de nuevo.",
+      ),
+    };
+  }
+
+  function safelyResetPayPalState() {
+    if (
+      checkoutState.kind !== "success" &&
+      checkoutState.kind !== "error" &&
+      checkoutState.kind !== "creating_order" &&
+      checkoutState.kind !== "capturing_order"
+    ) {
+      checkoutState = { kind: "ready" };
+    }
   }
 
   const closeOnEscape = closeOnEscapeHandler(() => open, close);
+
+  onDestroy(() => {
+    clearCloseTimeout();
+  });
 </script>
 
 <svelte:window onkeydown={closeOnEscape} />
@@ -46,27 +206,29 @@
       aria-modal="true"
       aria-labelledby="collector-pass-modal-title"
       tabindex="-1"
-      class="pointer-events-auto relative w-full max-w-sm rounded-4xl bg-popover shadow-2xl ring-1 ring-black/5 dark:ring-white/10"
+      class="pointer-events-auto relative flex max-h-[calc(100dvh-2rem)] w-full max-w-sm flex-col overflow-hidden rounded-4xl bg-popover shadow-2xl ring-1 ring-black/5 dark:ring-white/10"
       onclick={(e) => e.stopPropagation()}
       onkeydown={(e) => e.stopPropagation()}
     >
       <!-- Close button -->
       <button
         aria-label="Cerrar"
-        class="absolute top-3.5 right-3.5 z-10 flex size-8 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-[background-color,transform] duration-150 hover:bg-muted active:scale-[0.96]"
+        class="absolute top-3.5 right-3.5 z-10 flex size-10 shrink-0 items-center justify-center rounded-2xl text-muted-foreground transition-[background-color,transform] duration-150 hover:bg-muted active:scale-[0.96]"
+        disabled={isBusy}
+        aria-disabled={isBusy}
         onclick={close}
       >
         <XIcon class="size-4" />
       </button>
 
-      <div class="flex flex-col gap-6 p-6">
+      <div class="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto p-6">
         <!-- Header -->
         <div class="flex flex-col items-center gap-3 pt-1 text-center">
           <div
-            class="flex size-14 items-center justify-center rounded-3xl bg-primary/10"
+            class="flex size-14 items-center justify-center rounded-full bg-primary dark:bg-primary/10"
           >
             <TicketIcon
-              class="size-7 text-primary"
+              class="size-7 text-primary-foreground/80 dark:text-primary"
               style="transform: rotate(-45deg)"
             />
           </div>
@@ -89,9 +251,11 @@
           {#each benefits as benefit (benefit)}
             <li class="flex items-start gap-3">
               <div
-                class="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-primary/10"
+                class="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-primary dark:bg-primary/10"
               >
-                <CheckIcon class="size-3 text-primary" />
+                <CheckIcon
+                  class="size-3 text-primary-foreground/80 dark:text-primary"
+                />
               </div>
               <span class="text-sm leading-relaxed">{benefit}</span>
             </li>
@@ -119,12 +283,61 @@
 
         <!-- CTA -->
         <div class="flex flex-col gap-2">
-          <Button class="w-full duration-150 active:scale-[0.96]" disabled>
-            Pagar con PayPal
-          </Button>
-          <p class="text-center text-xs text-pretty text-muted-foreground">
-            Integración de pago próximamente disponible.
-          </p>
+          {#if checkoutState.kind === "success"}
+            <div
+              role="status"
+              aria-live="polite"
+              class="rounded-2xl border border-primary/20 bg-primary/10 px-4 py-3 text-center"
+            >
+              <p class="text-sm font-medium text-primary">{statusMessage}</p>
+              <p class="mt-1 text-xs text-muted-foreground">
+                Ya puedes publicar y vender tus cromos.
+              </p>
+            </div>
+          {:else}
+            {#if checkoutState.kind !== "error"}
+              <div
+                class="min-h-[44px] rounded-2xl"
+                {@attach paypalButtonsAttachment({
+                  clientId: env.PUBLIC_PAYPAL_CLIENT_ID,
+                  createOrder,
+                  onApprove,
+                  onError: onPayPalError,
+                  onCancel: safelyResetPayPalState,
+                  onLoading: () => {
+                    checkoutState = { kind: "initializing_paypal" };
+                  },
+                  onReady: safelyResetPayPalState,
+                })}
+              ></div>
+            {/if}
+
+            {#if checkoutState.kind === "error"}
+              <div class="flex flex-col gap-2">
+                <p
+                  role="alert"
+                  class="text-center text-xs text-pretty text-destructive"
+                >
+                  {statusMessage}
+                </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  class="w-full duration-150 active:scale-[0.96]"
+                  onclick={retry}
+                >
+                  Reintentar
+                </Button>
+              </div>
+            {:else if checkoutState.kind === "creating_order"}
+              <p
+                aria-live="polite"
+                class="text-center text-xs text-pretty text-muted-foreground"
+              >
+                {statusMessage}
+              </p>
+            {/if}
+          {/if}
         </div>
       </div>
     </div>

@@ -137,7 +137,7 @@
                 onclick={() => (activeSection = "stickers")}
               >
                 <LayoutGridIcon class="size-4 shrink-0" />
-                Stickers
+                Cromos
               </button>
             {/if}
           </nav>

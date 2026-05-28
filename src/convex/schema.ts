@@ -51,7 +51,6 @@ export default defineSchema({
     activatedAt: v.number(),
     defaultCitySlug: v.optional(v.string()),
     defaultCurrency: v.optional(v.string()),
-    paymentId: v.optional(v.string()),
     username: v.string(),
     avatarUrl: v.optional(v.string()),
     bio: v.optional(v.string()),
@@ -149,6 +148,19 @@ export default defineSchema({
       "listingId",
       "createdAt",
     ]),
+
+  collectorPassPurchases: defineTable({
+    userId: v.id("users"),
+    paypalOrderId: v.string(),
+    paypalCaptureId: v.optional(v.string()),
+    amountCents: v.number(),
+    currency: v.string(),
+    createdAt: v.number(),
+    completedAt: v.optional(v.number()),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_paypalOrderId", ["paypalOrderId"])
+    .index("by_paypalCaptureId", ["paypalCaptureId"]),
 
   sales: defineTable({
     listingId: v.id("listings"),

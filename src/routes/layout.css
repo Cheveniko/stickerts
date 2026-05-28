@@ -120,6 +120,7 @@
 
 @theme {
   --breakpoint-xs: 28rem;
+  --breakpoint-max: 85rem;
 }
 
 @layer utilities {

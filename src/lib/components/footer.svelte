@@ -21,7 +21,7 @@
 
 <footer class="border-t bg-background">
   <div
-    class="flex flex-wrap items-center gap-x-2 gap-y-2.5 px-4 py-3.5 sm:h-14 sm:flex-nowrap sm:justify-between sm:py-0 md:px-8"
+    class="container flex flex-wrap items-center gap-x-2 gap-y-2.5 py-3.5 sm:h-14 sm:flex-nowrap sm:justify-between sm:py-0"
   >
     <!-- Brand: always first, left -->
     <span class="order-1 shrink-0 text-sm font-bold">Stickerts</span>
@@ -34,7 +34,10 @@
         {m.footer_terms()}
       </a>
       <span aria-hidden="true">·</span>
-      <a href="/privacy" class="-m-1 p-1 transition-colors hover:text-foreground">
+      <a
+        href="/privacy"
+        class="-m-1 p-1 transition-colors hover:text-foreground"
+      >
         {m.footer_privacy()}
       </a>
     </div>

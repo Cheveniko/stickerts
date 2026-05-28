@@ -289,7 +289,7 @@
         <Textarea
           bind:ref={textareaRef}
           bind:value={message}
-          class="min-h-[88px] text-sm leading-relaxed"
+          class="min-h-[88px] leading-relaxed"
           disabled={isSending || submitSuccess}
           placeholder="Escribe un mensaje o selecciona cómo contactarte…"
         />

@@ -15,12 +15,12 @@
     </p>
   </div>
   <button
-    class="flex w-full items-center justify-between gap-3 rounded-2xl bg-muted/60 px-4 py-3 text-left transition-[background-color,transform] duration-150 hover:bg-muted active:scale-[0.96]"
+    class="flex w-full items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-left transition-[background-color,transform] duration-150 hover:bg-muted active:scale-[0.96]"
     onclick={() => (open = true)}
   >
     <div class="flex items-center gap-3">
       <div
-        class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10"
+        class="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10"
       >
         <TicketIcon
           class="size-4 text-primary"

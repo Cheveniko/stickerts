@@ -1,16 +1,25 @@
 import type { Doc } from "./_generated/dataModel";
-import { mutation, query, type QueryCtx } from "./_generated/server";
+import {
+  mutation,
+  query,
+  type MutationCtx,
+  type QueryCtx,
+} from "./_generated/server";
 import { ConvexError, v } from "convex/values";
 import { getCurrentAuthUserId, requireAuthUserId } from "./authHelpers";
 import { getCityBySlug, type City } from "./cities";
+import type { User } from "./users";
 
 export type Seller = Doc<"sellers">;
 export type CurrentSeller = Seller & { city: City | null };
 
 const USERNAME_REGEX = /^[a-z0-9_]{3,30}$/;
 const DEFAULT_CURRENCY_REGEX = /^[A-Z]{3}$/;
+const MIN_USERNAME_LENGTH = 3;
+const MAX_USERNAME_LENGTH = 30;
 
 type SellerDbCtx = Pick<QueryCtx, "db">;
+type SellerWriteCtx = Pick<MutationCtx, "db">;
 
 async function getSellerByUserId(ctx: SellerDbCtx, userId: Seller["userId"]) {
   return await ctx.db
@@ -64,6 +73,77 @@ function normalizeUsername(username: string) {
   return normalizedUsername;
 }
 
+function stripDiacritics(value: string) {
+  return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
+function sanitizeUsernameBase(value: string) {
+  return stripDiacritics(value)
+    .toLowerCase()
+    .trim()
+    .replace(/[’']/g, "")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .replace(/_+/g, "_");
+}
+
+function clampUsernameBase(value: string, maxLength: number) {
+  return value.slice(0, maxLength).replace(/_+$/g, "");
+}
+
+function buildUsernameCandidate(base: string, suffix: number) {
+  const suffixText = suffix === 0 ? "" : `_${suffix}`;
+  const trimmedBase = clampUsernameBase(
+    base,
+    MAX_USERNAME_LENGTH - suffixText.length,
+  );
+
+  if (trimmedBase.length < MIN_USERNAME_LENGTH) {
+    return null;
+  }
+
+  return normalizeUsername(`${trimmedBase}${suffixText}`);
+}
+
+function getInitialUsernameBases(user: User) {
+  const emailPrefix = user.email.split("@")[0] ?? "";
+
+  return [...new Set([user.name, emailPrefix, "collector"])]
+    .map(sanitizeUsernameBase)
+    .filter((value) => value.length >= MIN_USERNAME_LENGTH);
+}
+
+export async function generateUniqueSellerUsername(
+  ctx: SellerDbCtx,
+  user: User,
+) {
+  const bases = getInitialUsernameBases(user);
+
+  for (const base of bases) {
+    for (let suffix = 0; suffix < 1000; suffix += 1) {
+      const candidate = buildUsernameCandidate(base, suffix);
+
+      if (!candidate) {
+        continue;
+      }
+
+      const existingSeller = await ctx.db
+        .query("sellers")
+        .withIndex("by_username", (q) => q.eq("username", candidate))
+        .unique();
+
+      if (!existingSeller) {
+        return candidate;
+      }
+    }
+  }
+
+  throw new ConvexError({
+    code: "USERNAME_GENERATION_FAILED",
+    message: "No pudimos generar un username disponible para este seller.",
+  });
+}
+
 function normalizeCurrency(currency: string) {
   const normalizedCurrency = currency.trim().toUpperCase();
 
@@ -75,6 +155,38 @@ function normalizeCurrency(currency: string) {
   }
 
   return normalizedCurrency;
+}
+
+export async function activateSellerForCollectorPass(
+  ctx: SellerWriteCtx,
+  userId: Seller["userId"],
+  activatedAt: number,
+) {
+  const existingSeller = await getSellerByUserId(ctx, userId);
+
+  if (existingSeller) {
+    return existingSeller._id;
+  }
+
+  const user = await ctx.db.get(userId);
+
+  if (!user) {
+    throw new Error("No encontramos el usuario para activar el perfil seller.");
+  }
+
+  const username = await generateUniqueSellerUsername(ctx, user);
+
+  return await ctx.db.insert("sellers", {
+    userId,
+    status: "active",
+    activatedAt,
+    username,
+    ...(user.image ? { avatarUrl: user.image } : {}),
+    totalSalesCount: 0,
+    totalStickersSold: 0,
+    totalRevenueCents: 0,
+    activeListingsCount: 0,
+  });
 }
 
 export const getCurrentSeller = query({
