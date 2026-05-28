@@ -52,7 +52,7 @@
     seller.defaultCurrency ?? seller.city?.currency ?? "",
   );
   let submitError = $state("");
-  let intent = $state<ListingIntent>("trade");
+  let intent = $state<ListingIntent>("sale");
   let tradeDescription = $state("");
   let wantedStickerIds = $state<Sticker["_id"][]>([]);
 

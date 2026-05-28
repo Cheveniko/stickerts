@@ -3,7 +3,7 @@ import type { Id } from "$convex/_generated/dataModel";
 
 const PRICE_DECIMAL_PRECISION_EPSILON = 1e-6;
 
-export const listingIntents = ["trade", "sale", "sale_or_trade"] as const;
+export const listingIntents = ["sale", "trade", "sale_or_trade"] as const;
 export type ListingIntent = (typeof listingIntents)[number];
 
 const requiredFileSchema = z.custom<File>(
@@ -26,7 +26,7 @@ const requiredCurrencySchema = z.custom<string>(
   "Selecciona una moneda.",
 );
 
-const listingIntentSchema = z.enum(listingIntents).default("trade");
+const listingIntentSchema = z.enum(listingIntents).default("sale");
 
 const priceSchema = z
   .custom<number>(
