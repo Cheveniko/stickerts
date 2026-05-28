@@ -101,10 +101,12 @@
 
       <!-- Responsive layout: stacked on mobile, two-column on desktop -->
       <div
-        class="flex flex-col h-[480px] max-h-[calc(100dvh-2rem)] sm:flex-row sm:h-[520px] lg:h-[540px]"
+        class="flex h-[480px] max-h-[calc(100dvh-2rem)] flex-col sm:h-[520px] sm:flex-row lg:h-[540px]"
       >
         <!-- RAIL: tab bar on mobile (top), sidebar on desktop (left) -->
-        <div class="flex flex-row border-b pr-12 p-2 sm:w-44 sm:shrink-0 sm:flex-col sm:border-b-0 sm:border-r sm:p-3 sm:pr-3">
+        <div
+          class="flex flex-row border-b p-2 pr-12 sm:w-44 sm:shrink-0 sm:flex-col sm:border-r sm:border-b-0 sm:p-3 sm:pr-3"
+        >
           <nav class="flex flex-1 flex-row gap-1 sm:flex-col sm:gap-0.5">
             <!-- Profile button -->
             <button
@@ -138,7 +140,7 @@
           </nav>
 
           <!-- Sign out: desktop sidebar only -->
-          <div class="hidden sm:block mt-auto border-t pt-2">
+          <div class="mt-auto hidden border-t pt-2 sm:block">
             <button
               disabled={signingOut}
               class="flex w-full items-center gap-2.5 rounded-2xl px-3 py-2 text-sm font-medium text-destructive transition-colors duration-150 hover:bg-destructive/10 active:scale-[0.96] disabled:pointer-events-none disabled:opacity-50"
