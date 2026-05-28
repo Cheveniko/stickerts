@@ -40,7 +40,7 @@ export default defineSchema({
     emailVerificationTime: v.optional(v.number()),
     phone: v.optional(v.string()),
     phoneVerificationTime: v.optional(v.number()),
-    freeSellerContactsRemaining: v.optional(v.number()),
+    freeSellerContactsRemaining: v.number(),
     isAnonymous: v.optional(v.boolean()),
   })
     .index("email", ["email"])
