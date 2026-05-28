@@ -13,6 +13,7 @@
   import type { CurrentSeller } from "$convex/sellers";
   import SellerSettings from "./seller-settings.svelte";
   import Separator from "./ui/separator/separator.svelte";
+  import CollectorPassCallout from "./collector-pass-callout.svelte";
 
   type Props = { user: User; seller: CurrentSeller | null; open: boolean };
 
@@ -124,19 +125,21 @@
             </button>
 
             <!-- Stickers button -->
-            <button
-              disabled={signingOut}
-              class={[
-                "flex items-center gap-2.5 rounded-2xl px-3 py-2.5 text-sm font-medium transition-colors duration-150 disabled:pointer-events-none disabled:opacity-50 sm:w-full sm:py-2",
-                activeSection === "stickers"
-                  ? "bg-muted text-foreground"
-                  : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
-              ].join(" ")}
-              onclick={() => (activeSection = "stickers")}
-            >
-              <LayoutGridIcon class="size-4 shrink-0" />
-              Stickers
-            </button>
+            {#if seller}
+              <button
+                disabled={signingOut}
+                class={[
+                  "flex items-center gap-2.5 rounded-2xl px-3 py-2.5 text-sm font-medium transition-colors duration-150 disabled:pointer-events-none disabled:opacity-50 sm:w-full sm:py-2",
+                  activeSection === "stickers"
+                    ? "bg-muted text-foreground"
+                    : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
+                ].join(" ")}
+                onclick={() => (activeSection = "stickers")}
+              >
+                <LayoutGridIcon class="size-4 shrink-0" />
+                Stickers
+              </button>
+            {/if}
           </nav>
 
           <!-- Sign out: desktop sidebar only -->
@@ -166,10 +169,7 @@
               {#if seller}
                 <SellerSettings {seller} />
               {:else}
-                <p class="text-sm text-pretty text-muted-foreground">
-                  Tu perfil de vendedor se completa cuando actives tu cuenta de
-                  vendedor.
-                </p>
+                <CollectorPassCallout />
               {/if}
             </div>
           {:else}
