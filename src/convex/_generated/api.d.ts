@@ -15,7 +15,6 @@ import type * as collectorPassPurchases from "../collectorPassPurchases.js";
 import type * as http from "../http.js";
 import type * as listings from "../listings.js";
 import type * as locationSeed from "../locationSeed.js";
-import type * as purchaseInquiries from "../purchaseInquiries.js";
 import type * as resend from "../resend.js";
 import type * as sellers from "../sellers.js";
 import type * as stickers from "../stickers.js";
@@ -35,7 +34,6 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   listings: typeof listings;
   locationSeed: typeof locationSeed;
-  purchaseInquiries: typeof purchaseInquiries;
   resend: typeof resend;
   sellers: typeof sellers;
   stickers: typeof stickers;

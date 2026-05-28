@@ -9,6 +9,8 @@
     getInitial,
     getListingImageUrl,
   } from "$lib/utils";
+  import { useCurrentUser } from "$lib/hooks/useCurrentUser.svelte";
+  import LoginModal from "$lib/components/login-modal.svelte";
   import PurchaseModal from "$lib/components/purchase-modal.svelte";
   import ArrowLeftRightIcon from "@lucide/svelte/icons/arrow-left-right";
 
@@ -51,7 +53,21 @@
     m.listing_quantity_short({ count: listing.quantityAvailable }),
   );
 
-  let modalOpen = $state(false);
+  const currentUser = $derived.by(useCurrentUser());
+
+  let purchaseOpen = $state(false);
+  let loginOpen = $state(false);
+
+  function handleCtaClick() {
+    if (currentUser.status === "authenticated") {
+      purchaseOpen = true;
+      return;
+    }
+
+    if (currentUser.status === "anonymous") {
+      loginOpen = true;
+    }
+  }
 </script>
 
 <Card.Root
@@ -125,7 +141,7 @@
 
     <!-- CTA button: full width -->
     <button
-      onclick={() => (modalOpen = true)}
+      onclick={handleCtaClick}
       class="w-full rounded-xl bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground [transition-property:transform] duration-150 hover:brightness-105 active:scale-[0.96]"
     >
       {ctaLabel}
@@ -133,4 +149,5 @@
   </Card.Footer>
 </Card.Root>
 
-<PurchaseModal {listing} bind:open={modalOpen} />
+<PurchaseModal {listing} bind:open={purchaseOpen} />
+<LoginModal bind:open={loginOpen} />

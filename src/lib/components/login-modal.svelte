@@ -105,8 +105,8 @@
           <!-- Header row -->
           <div class="flex items-start justify-between gap-4">
             <div class="flex min-w-0 flex-col gap-0.5">
-              <h2 id="login-modal-title" class="font-semibold text-balance">
-                Regístrate para empezar a vender
+              <h2 id="login-modal-title" class="font-semibold">
+                Regístrate para empezar
               </h2>
               <p class="text-sm text-muted-foreground">
                 Ingresa tu correo y recibirás un enlace para entrar.
@@ -157,7 +157,7 @@
               <Button
                 type="submit"
                 disabled={!email.trim() || submitting}
-                class="duration-150 hover:bg-primary hover:brightness-105 active:scale-[0.96]"
+                class="w-[95px] duration-150 hover:bg-primary hover:brightness-105 active:scale-[0.96]"
               >
                 {submitting ? "Enviando" : "Continuar"}
               </Button>
@@ -175,10 +175,13 @@
               <h2 id="login-modal-title" class="font-semibold">
                 Revisa tu correo
               </h2>
-              <p class="text-sm text-pretty text-muted-foreground">
+              <p class="text-sm text-balance text-muted-foreground">
                 Te enviamos un enlace mágico a
-                <span class="font-semibold text-foreground">{email}</span>. Haz
-                clic en él para completar tu registro.
+                <span class="font-semibold text-foreground">
+                  {email}
+                </span>.
+                <br />
+                Haz clic en él para completar tu registro.
               </p>
             </div>
             <Button

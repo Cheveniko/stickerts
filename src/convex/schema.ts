@@ -128,27 +128,6 @@ export default defineSchema({
       "wantedStickerId",
     ]),
 
-  purchaseInquiries: defineTable({
-    listingId: v.id("listings"),
-    sellerId: v.id("sellers"),
-    stickerId: v.id("stickers"),
-    anonymousClientId: v.string(),
-    message: v.string(),
-    createdAt: v.number(),
-  })
-    .index("by_createdAt", ["createdAt"])
-    .index("by_listingId_and_createdAt", ["listingId", "createdAt"])
-    .index("by_sellerId_and_createdAt", ["sellerId", "createdAt"])
-    .index("by_anonymousClientId_and_createdAt", [
-      "anonymousClientId",
-      "createdAt",
-    ])
-    .index("by_anonymousClientId_and_listingId_and_createdAt", [
-      "anonymousClientId",
-      "listingId",
-      "createdAt",
-    ]),
-
   collectorPassPurchases: defineTable({
     userId: v.id("users"),
     paypalOrderId: v.string(),
