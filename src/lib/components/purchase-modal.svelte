@@ -9,18 +9,20 @@
   import MailIcon from "@lucide/svelte/icons/mail";
   import PhoneIcon from "@lucide/svelte/icons/phone";
   import ShieldIcon from "@lucide/svelte/icons/shield";
+  import GiftIcon from "@lucide/svelte/icons/gift";
   import XIcon from "@lucide/svelte/icons/x";
 
   type Props = {
     listing: ListingWithRelations;
     open: boolean;
+    freeContactsRemaining?: number | null;
   };
 
   type ContactOption = "whatsapp" | "email" | "phone";
 
   const MAX_MESSAGE_LENGTH = 500;
 
-  let { listing, open = $bindable() }: Props = $props();
+  let { listing, open = $bindable(), freeContactsRemaining = null }: Props = $props();
 
   let selectedOption = $state<ContactOption | null>(null);
   let message = $state("");
@@ -161,8 +163,8 @@
         <Textarea
           bind:ref={textareaRef}
           bind:value={message}
-          class="min-h-[88px] leading-relaxed"
-          placeholder="Escribe un mensaje o selecciona cómo contactarte…"
+          class="min-h-[88px] leading-relaxed placeholder:text-xs"
+          placeholder="Escribe un mensaje o selecciona cómo contactarte"
         />
 
         {#if messageTooLong}
@@ -171,13 +173,27 @@
           </p>
         {/if}
 
-        <div
-          class="flex items-start gap-2 rounded-2xl text-xs leading-relaxed text-muted-foreground"
-        >
-          <ShieldIcon class="mt-0.5 size-3.5 shrink-0 text-foreground/70" />
-          <p class="text-pretty">
-            Asegúrate de coordinar la transacción en un lugar público.
-          </p>
+        <div class="flex flex-col gap-1.5">
+          <div
+            class="flex items-start gap-2 text-xs leading-relaxed text-muted-foreground"
+          >
+            <ShieldIcon class="mt-0.5 size-3.5 shrink-0 text-foreground/70" />
+            <p class="text-pretty">
+              Asegúrate de coordinar la transacción en un lugar público.
+            </p>
+          </div>
+
+          {#if freeContactsRemaining !== null && freeContactsRemaining > 0}
+            <div
+              class="flex items-start gap-2 text-xs leading-relaxed text-muted-foreground"
+              transition:fade={{ duration: 150 }}
+            >
+              <GiftIcon class="mt-0.5 size-3.5 shrink-0 text-foreground/70" />
+              <p class="text-pretty">
+                Usarás tu contacto gratuito con vendedores.
+              </p>
+            </div>
+          {/if}
         </div>
 
         <div class="flex items-center justify-end gap-2">

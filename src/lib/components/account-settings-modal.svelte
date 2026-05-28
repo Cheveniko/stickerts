@@ -166,12 +166,14 @@
         <div class="flex-1 overflow-y-auto p-4 pt-5 sm:p-6 sm:pt-8">
           {#if activeSection === "profile"}
             <div class="">
-              <ProfileSettings {user} />
+              <ProfileSettings {user} {seller} />
               <Separator class="my-4" />
               {#if seller}
                 <SellerSettings {seller} />
               {:else}
-                <CollectorPassCallout onsuccess={() => (sellerSuccessOpen = true)} />
+                <CollectorPassCallout
+                  onsuccess={() => (sellerSuccessOpen = true)}
+                />
               {/if}
             </div>
           {:else}

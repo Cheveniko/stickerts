@@ -60,6 +60,20 @@
   let loginOpen = $state(false);
   let collectorPassOpen = $state(false);
 
+  const freeContactsRemaining = $derived(
+    currentUser.status === "authenticated"
+      ? currentUser.seller !== null
+        ? null
+        : currentUser.user.freeSellerContactsRemaining
+      : null,
+  );
+
+  const usedFreeContact = $derived(
+    currentUser.status === "authenticated" &&
+      currentUser.seller === null &&
+      currentUser.user.freeSellerContactsRemaining === 0,
+  );
+
   function handleCtaClick() {
     if (currentUser.status === "authenticated") {
       if (
@@ -167,9 +181,10 @@
   </Card.Footer>
 </Card.Root>
 
-<PurchaseModal {listing} bind:open={purchaseOpen} />
+<PurchaseModal {listing} bind:open={purchaseOpen} {freeContactsRemaining} />
 <CollectorPassModal
   bind:open={collectorPassOpen}
   onsuccess={handleCollectorPassSuccess}
+  {usedFreeContact}
 />
 <LoginModal bind:open={loginOpen} />

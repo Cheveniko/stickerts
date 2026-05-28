@@ -1,17 +1,21 @@
 <script lang="ts">
   import { api } from "$convex/_generated/api";
   import type { User } from "$convex/users";
+  import type { CurrentSeller } from "$convex/sellers";
   import { getConvexErrorMessage } from "$lib/convex-errors";
   import * as Avatar from "$lib/components/ui/avatar/index.js";
   import { getInitial } from "$lib/utils";
   import { useConvexClient } from "convex-svelte";
   import PencilLineIcon from "@lucide/svelte/icons/pencil-line";
+  import GiftIcon from "@lucide/svelte/icons/gift";
+  import { fade } from "svelte/transition";
 
   type Props = {
     user: User;
+    seller: CurrentSeller | null;
   };
 
-  let { user }: Props = $props();
+  let { user, seller }: Props = $props();
   const convex = useConvexClient();
 
   let isEditingName = $state(false);
@@ -75,14 +79,14 @@
             if (e.key === "Enter") saveName();
             if (e.key === "Escape") cancelName();
           }}
-          class="-mx-1 w-full min-w-0 rounded-sm border-0 bg-transparent px-1 py-0.5 font-semibold ring-1 ring-ring outline-none"
+          class="-mx-1 w-full min-w-0 rounded-sm border-0 bg-transparent px-1 py-0.5 font-semibold ring-1 ring-ring outline-none text-center sm:text-left"
           {@attach (node) => node.focus()}
         />
       {:else}
         <button
           disabled={isSavingName}
           onclick={startEditing}
-          class="-mx-1 flex w-full cursor-text items-center gap-1.5 rounded-sm px-1 py-0.5 text-left transition-colors hover:bg-accent/50"
+          class="-mx-1 flex w-full cursor-text items-center gap-1.5 rounded-sm px-1 py-0.5 justify-center sm:justify-start transition-colors hover:bg-accent/50"
         >
           <span class="block truncate font-semibold">{user.name}</span>
           <PencilLineIcon class="h-3 w-3 shrink-0 text-muted-foreground" />
@@ -94,6 +98,26 @@
       {/if}
 
       <p class="truncate text-sm text-muted-foreground">{user.email}</p>
+
+      {#if !seller}
+        <div transition:fade={{ duration: 150 }}>
+          {#if user.freeSellerContactsRemaining > 0}
+            <span
+              class="mt-1 inline-flex items-center gap-1.5 rounded-full bg-primary/8 px-2.5 py-1 text-xs font-medium text-foreground"
+            >
+              <GiftIcon class="size-3 shrink-0" />
+              Tienes 1 contacto con vendedores gratis.
+            </span>
+          {:else}
+            <span
+              class="mt-1 inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground"
+            >
+              <GiftIcon class="size-3 shrink-0 opacity-60" />
+              Usaste tu contacto con vendedores gratis.
+            </span>
+          {/if}
+        </div>
+      {/if}
     </div>
   </div>
 </div>

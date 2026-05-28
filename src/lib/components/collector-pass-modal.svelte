@@ -19,8 +19,8 @@
   import { onDestroy } from "svelte";
   import { useConvexClient } from "convex-svelte";
 
-  type Props = { open: boolean; onsuccess?: () => void };
-  let { open = $bindable(), onsuccess }: Props = $props();
+  type Props = { open: boolean; onsuccess?: () => void; usedFreeContact?: boolean };
+  let { open = $bindable(), onsuccess, usedFreeContact = false }: Props = $props();
   const convex = useConvexClient();
 
   const benefits = [
@@ -242,8 +242,13 @@
               Pase de Coleccionista
             </h2>
             <p class="text-sm text-pretty text-muted-foreground">
-              Todo lo que necesitas para vender e intercambiar cromos en
-              Stickerts.
+              {#if usedFreeContact}
+                Ya usaste tu contacto gratuito con vendedores. Activa tu Pase
+                para contactar sin límites.
+              {:else}
+                Todo lo que necesitas para vender e intercambiar cromos en
+                Stickerts.
+              {/if}
             </p>
           </div>
         </div>
