@@ -115,7 +115,8 @@ export default defineSchema({
       "status",
       "stickerId",
     ])
-    .index("by_sellerId_and_status", ["sellerId", "status"]),
+    .index("by_sellerId_and_status", ["sellerId", "status"])
+    .index("by_sellerId_and_updatedAt", ["sellerId", "updatedAt"]),
 
   listingTradeWants: defineTable({
     listingId: v.id("listings"),

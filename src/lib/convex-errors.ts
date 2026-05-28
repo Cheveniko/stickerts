@@ -13,10 +13,14 @@ const convexErrorMessages = {
 const directConvexErrorMessages = {
   SELLER_INACTIVE: "Tu cuenta seller no puede publicar cromos en este momento.",
   STICKER_NOT_FOUND: "No encontramos el cromo seleccionado.",
+  LISTING_NOT_FOUND: "No encontramos la publicacion seleccionada.",
+  LISTING_REMOVED: "Esta publicacion ya no se puede editar.",
   INVALID_CURRENCY: "La moneda debe ser un codigo ISO de 3 letras.",
   INVALID_PRICE: "El precio debe ser mayor a 0.",
   INVALID_QUANTITY: "La cantidad debe ser mayor a 0.",
   INVALID_IMAGE_KEY: "La imagen seleccionada no pertenece a este seller.",
+  WANTED_STICKER_NOT_FOUND:
+    "Uno de los cromos solicitados para intercambio no existe.",
 } as const;
 
 export function getConvexErrorMessage(error: unknown) {
