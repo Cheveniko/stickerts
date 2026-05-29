@@ -6,6 +6,10 @@ const PRICE_DECIMAL_PRECISION_EPSILON = 1e-6;
 export const listingIntents = ["sale", "trade", "sale_or_trade"] as const;
 export type ListingIntent = (typeof listingIntents)[number];
 
+export const listingSearchParamsSchema = z.object({
+  q: z.string().default(""),
+});
+
 const requiredFileSchema = z.custom<File>(
   (value) => value instanceof File,
   "Selecciona una imagen para publicar tu cromo.",

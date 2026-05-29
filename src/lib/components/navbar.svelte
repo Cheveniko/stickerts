@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { Search } from "@lucide/svelte";
   import { Button } from "$lib/components/ui/button";
   import LoginModal from "$lib/components/login-modal.svelte";
   import AccountSettingsModal from "$lib/components/account-settings-modal.svelte";
@@ -7,6 +6,7 @@
   import { useCurrentUser } from "$lib/hooks/useCurrentUser.svelte";
   import * as m from "$lib/paraglide/messages";
   import { cn, getInitial } from "$lib/utils";
+  import SearchBar from "$lib/components/search-bar.svelte";
 
   let loginOpen = $state(false);
   let settingsOpen = $state(false);
@@ -21,16 +21,7 @@
 >
   <span class="shrink-0 text-lg font-bold">Stickerts</span>
 
-  <div
-    class="hidden flex-1 items-center gap-2 rounded-full px-3 py-1.5 md:flex"
-  >
-    <Search class="size-4 shrink-0 text-muted-foreground" />
-    <input
-      type="search"
-      placeholder={m.nav_search_placeholder()}
-      class="w-full rounded-full border-transparent bg-transparent text-sm placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:outline-none"
-    />
-  </div>
+  <SearchBar />
 
   <div class="flex shrink-0 items-center gap-2 md:gap-3">
     <span class="text-sm text-muted-foreground">{m.nav_how_it_works()}</span>
