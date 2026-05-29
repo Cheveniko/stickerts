@@ -58,13 +58,13 @@
     {#each faqs as faq, i (i)}
       <div>
         <button
-          class="flex w-full items-center justify-between gap-4 px-5 py-4 text-left text-sm font-medium transition-colors duration-150 hover:bg-muted/50 active:bg-muted/70"
+          class="flex w-full items-center justify-between gap-4 px-5 py-4 text-left text-sm font-medium transition-[background-color,transform] duration-150 hover:bg-muted/50 active:bg-muted/70"
           onclick={() => toggle(i)}
           aria-expanded={openIndex === i}
         >
-          <span class="text-sm font-medium">{faq.question}</span>
+          <span class="text-base font-medium">{faq.question}</span>
           <ChevronDown
-            class="size-4 shrink-0 text-muted-foreground transition-transform duration-300 {openIndex ===
+            class="size-4 shrink-0 text-muted-foreground transition-transform duration-300 ease-[cubic-bezier(0.2,0,0,1)] {openIndex ===
             i
               ? 'rotate-180'
               : ''}"
@@ -77,7 +77,7 @@
         >
           <div class="overflow-hidden">
             <p
-              class="px-5 pb-4 text-sm leading-relaxed text-muted-foreground"
+              class="px-5 pt-1 pb-4 text-base leading-relaxed text-foreground/75"
               style="text-wrap: pretty"
             >
               {faq.answer}

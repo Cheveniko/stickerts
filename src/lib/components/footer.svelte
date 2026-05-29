@@ -40,6 +40,14 @@
       >
         {m.footer_privacy()}
       </a>
+      <span aria-hidden="true">·</span>
+      <a
+        href="https://x.com/Cheveniko"
+        target="_blank"
+        class="-m-1 p-1 transition-colors hover:text-foreground"
+      >
+        Feedback
+      </a>
     </div>
 
     <!-- Theme toggle + attribution: pushed right on mobile (ml-auto), right on desktop -->

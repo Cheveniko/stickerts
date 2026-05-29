@@ -17,7 +17,7 @@
 
   const isHomePage = $derived(
     // @ts-ignore
-    page.url.pathname === "/" || page.url.pathname === "/en",
+    page.url.pathname === "/",
   );
 </script>
 
