@@ -1,13 +1,16 @@
 <script lang="ts">
+  import { api } from "$convex/_generated/api";
   import type { ListingWithRelations } from "$convex/listings";
+  import { getConvexErrorMessage } from "$lib/convex-errors";
   import { closeOnEscapeHandler } from "$lib/utils";
+  import { useConvexClient } from "convex-svelte";
   import { fade, fly } from "svelte/transition";
-  import { cubicOut } from "svelte/easing";
+  import { cubicIn, cubicOut } from "svelte/easing";
+  import { toast } from "svelte-sonner";
   import { Textarea } from "$lib/components/ui/textarea/index.js";
   import { Button } from "$lib/components/ui/button/index.js";
   import MessageCircleIcon from "@lucide/svelte/icons/message-circle";
   import MailIcon from "@lucide/svelte/icons/mail";
-  import PhoneIcon from "@lucide/svelte/icons/phone";
   import ShieldIcon from "@lucide/svelte/icons/shield";
   import GiftIcon from "@lucide/svelte/icons/gift";
   import XIcon from "@lucide/svelte/icons/x";
@@ -18,15 +21,22 @@
     freeContactsRemaining?: number | null;
   };
 
-  type ContactOption = "whatsapp" | "email" | "phone";
+  type ContactOption = "whatsapp" | "email";
 
   const MAX_MESSAGE_LENGTH = 500;
 
-  let { listing, open = $bindable(), freeContactsRemaining = null }: Props = $props();
+  let {
+    listing,
+    open = $bindable(),
+    freeContactsRemaining = null,
+  }: Props = $props();
+  const convex = useConvexClient();
 
   let selectedOption = $state<ContactOption | null>(null);
   let message = $state("");
   let textareaRef = $state<HTMLTextAreaElement | null>(null);
+  let isSending = $state(false);
+  let submitError = $state("");
 
   const modalSubtitle = $derived(
     listing.intent === "sale"
@@ -47,7 +57,11 @@
             `Hola ${listing.sellerName}, quiero comprar tu cromo ${listing.sticker.label}${listing.sticker.code ? ` - ${listing.sticker.code}` : ""}. Por favor contáctame vía ${channel} a: `,
   );
 
+  let trimmedMessage = $derived(message.trim());
   let messageTooLong = $derived(message.length > MAX_MESSAGE_LENGTH);
+  let canSubmit = $derived(
+    trimmedMessage.length > 0 && !messageTooLong && !isSending,
+  );
 
   const closeOnEscape = closeOnEscapeHandler(() => open, close);
 
@@ -58,15 +72,20 @@
   }[] = [
     { id: "whatsapp", label: "WhatsApp", Icon: MessageCircleIcon },
     { id: "email", label: "Email", Icon: MailIcon },
-    { id: "phone", label: "Teléfono", Icon: PhoneIcon },
   ];
 
   function resetModalState() {
     selectedOption = null;
     message = "";
+    submitError = "";
+    isSending = false;
   }
 
   function close() {
+    if (isSending) {
+      return;
+    }
+
     open = false;
     setTimeout(() => {
       resetModalState();
@@ -85,8 +104,36 @@
     }, 0);
   }
 
-  function sendMessage() {
-    return;
+  async function sendMessage() {
+    submitError = "";
+
+    if (messageTooLong) {
+      submitError = "Máximo 500 caracteres permitidos.";
+      return;
+    }
+
+    if (!trimmedMessage || isSending) {
+      return;
+    }
+
+    isSending = true;
+
+    try {
+      await convex.action(api.contacts.sendSellerContact, {
+        listingId: listing._id,
+        message: trimmedMessage,
+      });
+
+      isSending = false;
+      toast.success(
+        "Mensaje enviado. El vendedor recibirá tu contacto por email.",
+      );
+      close();
+    } catch (error) {
+      submitError = getConvexErrorMessage(error);
+    } finally {
+      isSending = false;
+    }
   }
 </script>
 
@@ -96,15 +143,17 @@
   <div
     role="presentation"
     class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
-    transition:fade={{ duration: 180 }}
-    onclick={close}
+    in:fade={{ duration: 180 }}
+    out:fade={{ duration: 150 }}
+    onclick={() => !isSending && close()}
   ></div>
 {/if}
 
 {#if open}
   <div
     class="pointer-events-none fixed inset-0 z-50 flex items-center justify-center p-4"
-    transition:fly={{ y: 14, duration: 280, easing: cubicOut }}
+    in:fly={{ y: 14, duration: 280, easing: cubicOut }}
+    out:fly={{ y: 14, duration: 200, easing: cubicIn }}
   >
     <div
       role="dialog"
@@ -130,6 +179,7 @@
           <button
             aria-label="Cerrar"
             class="flex size-8 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-[background-color,transform] duration-150 hover:bg-muted active:scale-[0.96]"
+            disabled={isSending}
             onclick={close}
           >
             <XIcon class="size-4" />
@@ -144,6 +194,7 @@
           <div class="flex flex-wrap gap-1.5">
             {#each contactOptions as option (option.id)}
               <button
+                disabled={isSending}
                 class={[
                   "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-[background-color,color,transform] duration-150 active:scale-[0.96]",
                   selectedOption === option.id
@@ -164,6 +215,7 @@
           bind:ref={textareaRef}
           bind:value={message}
           class="min-h-[88px] leading-relaxed placeholder:text-xs"
+          disabled={isSending}
           placeholder="Escribe un mensaje o selecciona cómo contactarte"
         />
 
@@ -171,6 +223,10 @@
           <p class="text-xs text-destructive">
             Máximo 500 caracteres permitidos.
           </p>
+        {/if}
+
+        {#if submitError}
+          <p class="text-xs text-destructive">{submitError}</p>
         {/if}
 
         <div class="flex flex-col gap-1.5">
@@ -199,16 +255,22 @@
         <div class="flex items-center justify-end gap-2">
           <Button
             variant="ghost"
+            disabled={isSending}
             class="border border-border duration-150 active:scale-[0.96]"
             onclick={close}
           >
             Cancelar
           </Button>
           <Button
+            disabled={!canSubmit}
             class="duration-150 hover:bg-primary hover:brightness-105 active:scale-[0.96]"
             onclick={sendMessage}
           >
-            Enviar mensaje
+            {#if isSending}
+              Enviando
+            {:else}
+              Enviar mensaje
+            {/if}
           </Button>
         </div>
       </div>

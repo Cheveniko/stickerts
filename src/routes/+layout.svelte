@@ -13,6 +13,7 @@
   import Navbar from "$lib/components/navbar.svelte";
   import Footer from "$lib/components/footer.svelte";
   import NewListingDrawer from "$lib/components/new-listing-drawer.svelte";
+  import { Toaster } from "$lib/components/ui/sonner/index.js";
 
   let { children, data } = $props();
   injectAnalytics({ mode: dev ? "development" : "production" });
@@ -32,6 +33,7 @@
 <div class="flex min-h-dvh flex-col">
   <Navbar />
   <main class="flex-1">
+    <Toaster />
     {@render children()}
   </main>
   <Footer />

@@ -12,6 +12,7 @@ import type * as auth from "../auth.js";
 import type * as authHelpers from "../authHelpers.js";
 import type * as cities from "../cities.js";
 import type * as collectorPassPurchases from "../collectorPassPurchases.js";
+import type * as contacts from "../contacts.js";
 import type * as http from "../http.js";
 import type * as listings from "../listings.js";
 import type * as locationSeed from "../locationSeed.js";
@@ -31,6 +32,7 @@ declare const fullApi: ApiFromModules<{
   authHelpers: typeof authHelpers;
   cities: typeof cities;
   collectorPassPurchases: typeof collectorPassPurchases;
+  contacts: typeof contacts;
   http: typeof http;
   listings: typeof listings;
   locationSeed: typeof locationSeed;

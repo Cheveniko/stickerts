@@ -21,6 +21,18 @@ const directConvexErrorMessages = {
   INVALID_IMAGE_KEY: "La imagen seleccionada no pertenece a este seller.",
   WANTED_STICKER_NOT_FOUND:
     "Uno de los cromos solicitados para intercambio no existe.",
+  CONTACT_LISTING_UNAVAILABLE: "Este cromo ya no esta disponible.",
+  CONTACT_TARGET_UNAVAILABLE: "No pudimos preparar este contacto.",
+  CONTACT_SELLER_EMAIL_UNAVAILABLE:
+    "Este vendedor no tiene un medio de contacto disponible.",
+  CONTACT_USER_NOT_FOUND: "No encontramos al usuario actual.",
+  CONTACT_FREE_LIMIT_REACHED: "Ya usaste tu contacto con vendedores gratis.",
+  CONTACT_RATE_LIMITED:
+    "Ya contactaste a este vendedor por esta publicacion en las ultimas 24 horas.",
+  CONTACT_MESSAGE_REQUIRED: "Escribe un mensaje antes de enviarlo.",
+  CONTACT_MESSAGE_TOO_LONG: "Tu mensaje es demasiado largo.",
+  CONTACT_SELF_NOT_ALLOWED: "No puedes contactarte con tu propia publicacion.",
+  CONTACT_SEND_FAILED: "No pudimos enviar tu mensaje. Intenta de nuevo.",
 } as const;
 
 export function getConvexErrorMessage(error: unknown) {
