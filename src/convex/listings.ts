@@ -300,7 +300,7 @@ export const getActiveListingsWithDetails = query({
   handler: async (ctx) => {
     const listings = await ctx.db
       .query("listings")
-      .withIndex("by_status", (q) => q.eq("status", "active"))
+      .withIndex("by_status_and_priceCents", (q) => q.eq("status", "active"))
       .order("desc")
       .collect();
 

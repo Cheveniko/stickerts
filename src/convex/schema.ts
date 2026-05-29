@@ -108,6 +108,7 @@ export default defineSchema({
     updatedAt: v.number(),
   })
     .index("by_status", ["status"])
+    .index("by_status_and_priceCents", ["status", "priceCents"])
     .index("by_stickerId_and_status", ["stickerId", "status"])
     .index("by_citySlug_and_status", ["citySlug", "status"])
     .index("by_citySlug_and_status_and_stickerId", [

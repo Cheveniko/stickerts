@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">Stickerts Open Graph Placeholder</title>
+  <desc id="desc">Placeholder temporal para las tarjetas sociales de Stickerts.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#fffdf8" />
+      <stop offset="100%" stop-color="#f7f0c6" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)" rx="32" />
+  <g fill="#1f1f1f">
+    <text x="96" y="250" font-family="Arial, Helvetica, sans-serif" font-size="92" font-weight="700">
+      Stickerts
+    </text>
+    <text x="96" y="340" font-family="Arial, Helvetica, sans-serif" font-size="40">
+      Compra, vende e intercambia cromos
+    </text>
+    <text x="96" y="396" font-family="Arial, Helvetica, sans-serif" font-size="40">
+      Placeholder temporal para Open Graph y Twitter Cards
+    </text>
+  </g>
+  <circle cx="1038" cy="176" r="92" fill="#fce519" />
+  <circle cx="918" cy="314" r="48" fill="#1f1f1f" opacity="0.12" />
+  <circle cx="1068" cy="388" r="64" fill="#1f1f1f" opacity="0.08" />
+</svg>
