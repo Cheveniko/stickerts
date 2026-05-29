@@ -15,7 +15,10 @@
 
   const currentUser = $derived.by(useCurrentUser());
 
-  const isHomePage = $derived(page.url.pathname === "/");
+  const isHomePage = $derived(
+    // @ts-ignore
+    page.url.pathname === "/" || page.url.pathname === "/en",
+  );
 </script>
 
 <header
