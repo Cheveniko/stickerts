@@ -8,11 +8,15 @@
   import { cn, getInitial } from "$lib/utils";
   import SearchBar from "$lib/components/search-bar.svelte";
   import MobileSearchBar from "$lib/components/mobile-search-bar.svelte";
+  import { page } from "$app/state";
 
   let loginOpen = $state(false);
   let settingsOpen = $state(false);
 
   const currentUser = $derived.by(useCurrentUser());
+
+  const isHomePage = $derived(page.url.pathname === "/");
+  $inspect(isHomePage);
 </script>
 
 <header
@@ -23,12 +27,16 @@
   <div
     class="container flex h-14 items-center justify-between gap-4 md:contents"
   >
-    <span class="shrink-0 text-lg font-bold">Stickerts</span>
+    <a href="/" class="shrink-0 text-lg font-bold">Stickerts</a>
 
-    <SearchBar />
+    {#if isHomePage}
+      <SearchBar />
+    {/if}
 
     <div class="flex shrink-0 items-center gap-2 md:gap-3">
-      <MobileSearchBar />
+      {#if isHomePage}
+        <MobileSearchBar />
+      {/if}
       <span class="hidden text-sm text-muted-foreground md:block">
         {m.nav_how_it_works()}
       </span>

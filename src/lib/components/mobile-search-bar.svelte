@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Search } from "@lucide/svelte";
+  import { Search, X } from "@lucide/svelte";
   import { fade } from "svelte/transition";
   import { useSearchParams } from "runed/kit";
   import { listingSearchParamsSchema } from "$lib/schemas";
@@ -17,6 +17,7 @@
   }
 
   function collapse() {
+    params.q = "";
     expanded = false;
   }
 </script>
@@ -26,7 +27,7 @@
   type="button"
   aria-label="Search"
   onclick={() => (expanded = true)}
-  class="md:hidden flex items-center justify-center rounded-full p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground active:scale-[0.96]"
+  class="flex items-center justify-center rounded-full p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground active:scale-[0.96] md:hidden"
 >
   <Search class="size-5" />
 </button>
@@ -40,19 +41,21 @@
     <Search class="size-4 shrink-0 text-muted-foreground" />
 
     <input
-      {@attach focusOnMount}
       bind:value={params.q}
       type="search"
       placeholder={m.nav_search_placeholder()}
-      class="flex-1 border-transparent bg-transparent text-sm placeholder:text-muted-foreground focus:outline-none"
+      class="flex-1 border-transparent bg-transparent text-sm placeholder:text-muted-foreground focus:outline-none focus-visible:ring-0 focus-visible:outline-none"
+      onkeydown={(e) => e.key === "Enter" && e.currentTarget.blur()}
+      {@attach focusOnMount}
     />
 
     <button
       type="button"
       onclick={collapse}
-      class="shrink-0 text-sm font-medium text-primary"
+      class="flex shrink-0 items-center justify-center rounded-full p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground active:scale-[0.96]"
+      aria-label="Cerrar búsqueda"
     >
-      Cancelar
+      <X class="size-4" />
     </button>
   </div>
 {/if}
