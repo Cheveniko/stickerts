@@ -6,7 +6,7 @@
     {
       question: "¿Qué es Stickerts?",
       answer:
-        "La plataforma donde puedes comprar los cromos que te faltan y vender o intercambiar los que te sobran",
+        "Stickerts te ayuda a completar tu álbum conectándote con otros coleccionistas para comprar, vender e intercambiar cromos.",
     },
     {
       question: "¿Cómo me contacto con un vendedor?",

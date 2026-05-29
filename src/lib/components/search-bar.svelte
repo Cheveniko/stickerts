@@ -3,6 +3,13 @@
   import { useSearchParams } from "runed/kit";
   import { listingSearchParamsSchema } from "$lib/schemas";
   import * as m from "$lib/paraglide/messages";
+  import { cn } from "$lib/utils";
+
+  interface Props {
+    class?: string;
+  }
+
+  let { class: className = "hidden md:flex" }: Props = $props();
 
   const params = useSearchParams(listingSearchParamsSchema, {
     noScroll: true,
@@ -10,7 +17,9 @@
   });
 </script>
 
-<div class="hidden flex-1 items-center gap-2 rounded-full px-3 py-1.5 md:flex">
+<div
+  class={cn("flex-1 items-center gap-2 rounded-full px-3 py-1.5", className)}
+>
   <Search class="size-4 shrink-0 text-muted-foreground" />
   <input
     type="search"

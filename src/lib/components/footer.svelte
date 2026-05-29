@@ -60,7 +60,7 @@
       </button>
 
       <a
-        href="https://codeline.ai"
+        href="https://x.com/Cheveniko"
         target="_blank"
         rel="noopener noreferrer"
         class="-m-1 p-1 text-xs text-muted-foreground transition-colors hover:text-foreground"

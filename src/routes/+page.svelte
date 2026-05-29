@@ -43,7 +43,7 @@
   });
 </script>
 
-<main class="container space-y-6 pt-28 pb-16 md:pt-36">
+<main class="container space-y-6 pt-20 pb-16 md:pt-30">
   <h2 class="text-xl font-semibold">{m.home_heading()}</h2>
 
   {#if listingsQuery.isLoading}
