@@ -45,7 +45,7 @@
     {
       number: 9,
       title: "Seguridad de la información",
-      body: "Stickerts adopta medidas razonables para proteger la información de accesos no autorizados, alteraciones, pérdidas o usos indebidos. Sin embargo, ningún sistema tecnológico es completamente infalible, por lo que no podemos garantizar una seguridad absoluta en todos los casos.",
+      body: "Stickerts adopta medidas razonables para proteger la información de accesos no autorizados, alteraciones, pérdidas o usos indebidos.",
     },
     {
       number: 10,

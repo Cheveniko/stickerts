@@ -16,7 +16,6 @@
   const currentUser = $derived.by(useCurrentUser());
 
   const isHomePage = $derived(page.url.pathname === "/");
-  $inspect(isHomePage);
 </script>
 
 <header
@@ -37,9 +36,10 @@
       {#if isHomePage}
         <MobileSearchBar />
       {/if}
-      <span class="hidden text-sm text-muted-foreground md:block">
-        {m.nav_how_it_works()}
-      </span>
+      <!-- Algun día XD -->
+      <!-- <span class="hidden text-sm text-muted-foreground md:block"> -->
+      <!--   {m.nav_how_it_works()} -->
+      <!-- </span> -->
       {#if currentUser.status === "authenticated"}
         <button
           onclick={() => (settingsOpen = true)}
