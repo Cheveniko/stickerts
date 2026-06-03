@@ -1,4 +1,5 @@
 import { ConvexError, v } from "convex/values";
+import * as m from "../lib/paraglide/messages.js";
 import {
   mutation,
   query,
@@ -8,6 +9,7 @@ import {
 import type { Doc } from "./_generated/dataModel";
 import { requireAuthUserId } from "./authHelpers";
 import { getCityBySlug, type City } from "./cities";
+import { messageOptions } from "./i18n";
 import { requireCurrentSeller, type Seller } from "./sellers";
 import type { Sticker } from "./stickers";
 
@@ -64,7 +66,7 @@ function normalizeCurrency(currency: string) {
   if (!CURRENCY_REGEX.test(normalizedCurrency)) {
     throw new ConvexError({
       code: "INVALID_CURRENCY",
-      message: "La moneda debe ser un codigo ISO de 3 letras.",
+      message: m.error_invalid_currency({}, messageOptions()),
     });
   }
 
@@ -75,7 +77,7 @@ function normalizePriceCents(priceCents: number) {
   if (!Number.isInteger(priceCents) || priceCents <= 0) {
     throw new ConvexError({
       code: "INVALID_PRICE",
-      message: "El precio debe ser mayor a 0.",
+      message: m.error_invalid_price({}, messageOptions()),
     });
   }
 
@@ -86,7 +88,7 @@ function normalizeQuantityAvailable(quantityAvailable: number) {
   if (!Number.isInteger(quantityAvailable) || quantityAvailable <= 0) {
     throw new ConvexError({
       code: "INVALID_QUANTITY",
-      message: "La cantidad debe ser mayor a 0.",
+      message: m.error_invalid_quantity({}, messageOptions()),
     });
   }
 
@@ -111,7 +113,7 @@ async function requireOwnedListing(
   if (!listing || listing.sellerId !== sellerId) {
     throw new ConvexError({
       code: "LISTING_NOT_FOUND",
-      message: "No encontramos la publicacion seleccionada.",
+      message: m.error_listing_not_found({}, messageOptions()),
     });
   }
 
@@ -128,7 +130,7 @@ async function prepareListingWriteData(
   if (!city) {
     throw new ConvexError({
       code: "CITY_NOT_FOUND",
-      message: "No encontramos la ciudad seleccionada.",
+      message: m.error_city_not_found({}, messageOptions()),
     });
   }
 
@@ -149,14 +151,14 @@ async function prepareListingWriteData(
     if (args.priceCents === undefined) {
       throw new ConvexError({
         code: "INVALID_PRICE",
-        message: "Debes indicar un precio si publicas el cromo para venta.",
+        message: m.error_invalid_price({}, messageOptions()),
       });
     }
 
     if (!args.currency) {
       throw new ConvexError({
         code: "INVALID_CURRENCY",
-        message: "Debes indicar una moneda si publicas el cromo para venta.",
+        message: m.error_invalid_currency({}, messageOptions()),
       });
     }
 
@@ -167,7 +169,7 @@ async function prepareListingWriteData(
   if (!args.imageKey.startsWith(imageKeyPrefix)) {
     throw new ConvexError({
       code: "INVALID_IMAGE_KEY",
-      message: "La imagen seleccionada no pertenece a este seller.",
+      message: m.error_invalid_image_key({}, messageOptions()),
     });
   }
 
@@ -179,7 +181,7 @@ async function prepareListingWriteData(
     if (wantedStickers.some((wantedSticker) => !wantedSticker?.isActive)) {
       throw new ConvexError({
         code: "WANTED_STICKER_NOT_FOUND",
-        message: "Uno de los cromos solicitados para intercambio no existe.",
+        message: m.error_wanted_sticker_not_found({}, messageOptions()),
       });
     }
   }
@@ -348,7 +350,7 @@ export const createListing = mutation({
     if (seller.status !== "active") {
       throw new ConvexError({
         code: "SELLER_INACTIVE",
-        message: "Tu cuenta seller no puede publicar cromos en este momento.",
+        message: m.error_seller_inactive({}, messageOptions()),
       });
     }
 
@@ -357,7 +359,7 @@ export const createListing = mutation({
     if (!sticker || !sticker.isActive) {
       throw new ConvexError({
         code: "STICKER_NOT_FOUND",
-        message: "No encontramos el cromo seleccionado.",
+        message: m.error_sticker_not_found({}, messageOptions()),
       });
     }
 
@@ -409,7 +411,7 @@ export const updateCurrentSellerListing = mutation({
     if (listing.status === "removed") {
       throw new ConvexError({
         code: "LISTING_REMOVED",
-        message: "Esta publicacion ya no se puede editar.",
+        message: m.error_listing_removed({}, messageOptions()),
       });
     }
 

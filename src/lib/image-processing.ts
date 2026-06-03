@@ -1,3 +1,5 @@
+import * as m from "$lib/paraglide/messages";
+
 const LISTING_IMAGE_ASPECT_RATIO = 3 / 4;
 const LISTING_IMAGE_MAX_WIDTH = 1080;
 const LISTING_IMAGE_MAX_HEIGHT = 1440;
@@ -31,7 +33,7 @@ function loadImage(file: File): Promise<HTMLImageElement> {
 
     image.onerror = () => {
       URL.revokeObjectURL(objectUrl);
-      reject(new Error("No pudimos leer la imagen seleccionada."));
+      reject(new Error(m.error_image_read_failed()));
     };
 
     image.src = objectUrl;
@@ -74,7 +76,7 @@ function canvasToBlob(
     canvas.toBlob(
       (blob) => {
         if (!blob) {
-          reject(new Error("No pudimos procesar la imagen seleccionada."));
+          reject(new Error(m.error_image_process_failed()));
           return;
         }
 
@@ -100,7 +102,7 @@ export async function processListingImage(
   if (
     !LISTING_IMAGE_ACCEPTED_TYPES.includes(file.type as ListingImageContentType)
   ) {
-    throw new Error("Solo aceptamos imagenes JPG o PNG.");
+    throw new Error(m.error_upload_invalid_type());
   }
 
   const contentType = file.type as ListingImageContentType;
@@ -125,7 +127,7 @@ export async function processListingImage(
   const context = canvas.getContext("2d");
 
   if (!context) {
-    throw new Error("No pudimos preparar la imagen para subirla.");
+    throw new Error(m.error_image_prepare_failed());
   }
 
   context.drawImage(

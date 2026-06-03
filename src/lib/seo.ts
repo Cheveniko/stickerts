@@ -1,3 +1,6 @@
+import * as m from "$lib/paraglide/messages";
+import { localizeHref } from "$lib/paraglide/runtime";
+
 export const SITE_NAME = "Stickerts";
 export const SITE_URL = "https://www.stickerts.com";
 export const DEFAULT_OG_IMAGE_URL =
@@ -24,16 +27,17 @@ export type ResolvedSeoMetadata = {
   imageAlt: string;
 };
 
-const defaultSeo: SeoMetadata = {
-  title: "Stickerts | Compra, vende e intercambia cromos",
-  description:
-    "Conecta con otros coleccionistas para comprar, vender e intercambiar cromos y completar tu álbum en Stickerts.",
-  path: "/",
-  ogType: "website",
-  robots: "index,follow",
-  imageUrl: DEFAULT_OG_IMAGE_URL,
-  imageAlt: "Stickerts",
-};
+function getDefaultSeo(): SeoMetadata {
+  return {
+    title: m.seo_home_title(),
+    description: m.seo_home_description(),
+    path: localizeHref("/"),
+    ogType: "website",
+    robots: "index,follow",
+    imageUrl: DEFAULT_OG_IMAGE_URL,
+    imageAlt: m.seo_og_image_alt(),
+  };
+}
 
 export function buildAbsoluteUrl(path: string) {
   return new URL(path, SITE_URL).toString();
@@ -52,15 +56,20 @@ function resolveImageUrl(metadata: SeoMetadata) {
 }
 
 export function createSeoMetadata(metadata: SeoMetadata): SeoMetadata {
+  const defaultSeo = getDefaultSeo();
+
   return {
     ...defaultSeo,
     ...metadata,
+    path: localizeHref(metadata.path),
   };
 }
 
 export function resolveSeoMetadata(
   metadata?: Partial<SeoMetadata> | null,
 ): ResolvedSeoMetadata {
+  const defaultSeo = getDefaultSeo();
+
   const resolved = {
     ...defaultSeo,
     ...metadata,
@@ -73,7 +82,6 @@ export function resolveSeoMetadata(
     ogType: resolved.ogType ?? "website",
     robots: resolved.robots ?? "index,follow",
     imageUrl: resolveImageUrl(resolved),
-    imageAlt:
-      resolved.imageAlt ?? defaultSeo.imageAlt ?? "Imagen de Open Graph",
+    imageAlt: resolved.imageAlt ?? defaultSeo.imageAlt ?? m.seo_og_image_alt(),
   };
 }

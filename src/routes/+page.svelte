@@ -49,19 +49,19 @@
   {#if listingsQuery.isLoading}
     <ListingsSkeleton />
   {:else if listingsQuery.error}
-    <p>Error</p>
+    <p>{m.home_error_generic()}</p>
   {:else if listingsQuery.data?.length === 0}
     <div class="flex flex-col items-center justify-center py-24">
       <span class="text-4xl">🔍</span>
       <p class="mt-3 text-sm text-muted-foreground">
-        No hay cromos disponibles.
+        {m.home_empty_listings()}
       </p>
     </div>
   {:else if filteredListings.length === 0}
     <div class="flex flex-col items-center justify-center py-24">
       <span class="text-4xl">🔍</span>
       <p class="mt-3 text-sm text-muted-foreground">
-        No se encontraron cromos para esa busqueda.
+        {m.home_no_search_results()}
       </p>
     </div>
   {:else}

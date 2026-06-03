@@ -1,5 +1,7 @@
 import AuthResend from "@auth/core/providers/resend";
 import { convexAuth } from "@convex-dev/auth/server";
+import * as m from "../lib/paraglide/messages.js";
+import { getLocaleFromUrl, messageOptions } from "./i18n";
 import { resend, RESEND_LOGIN_FROM } from "./resend";
 
 function getDefaultNameFromEmail(email: string) {
@@ -12,12 +14,13 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
       apiKey: process.env.RESEND_API_KEY,
       from: RESEND_LOGIN_FROM,
       async sendVerificationRequest({ identifier: email, url, provider }) {
+        const locale = getLocaleFromUrl(url);
         const result = await resend.emails.send({
           from: provider.from ?? RESEND_LOGIN_FROM,
           to: email,
-          subject: "Tu acceso a Stickerts",
-          html: "",
-          text: `Entra a Stickerts con este link:\n\n${url}\n`,
+          subject: m.email_login_subject({}, messageOptions(locale)),
+          html: `<div style="font-family: Inter, Arial, sans-serif; color: #111827; line-height: 1.6;"><p>${m.email_login_html_intro({}, messageOptions(locale))}</p><p><a href="${url}">${url}</a></p></div>`,
+          text: m.email_login_text({ url }, messageOptions(locale)),
         });
 
         if (result.error) {

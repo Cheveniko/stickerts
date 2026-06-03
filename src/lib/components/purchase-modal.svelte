@@ -13,7 +13,9 @@
   import MailIcon from "@lucide/svelte/icons/mail";
   import ShieldIcon from "@lucide/svelte/icons/shield";
   import GiftIcon from "@lucide/svelte/icons/gift";
-  import XIcon from "@lucide/svelte/icons/x";
+import XIcon from "@lucide/svelte/icons/x";
+import * as m from "$lib/paraglide/messages";
+import { getLocale } from "$lib/paraglide/runtime";
 
   type Props = {
     listing: ListingWithRelations;
@@ -40,21 +42,40 @@
 
   const modalSubtitle = $derived(
     listing.intent === "sale"
-      ? "Envía tus datos al vendedor para coordinar la compra."
+      ? m.purchase_subtitle_sale()
       : listing.intent === "trade"
-        ? "Envía tus datos al vendedor para coordinar el intercambio."
-        : "Envía tus datos al vendedor para comprar o intercambiar.",
+        ? m.purchase_subtitle_trade()
+        : m.purchase_subtitle_both(),
+  );
+
+  const stickerCodeLabel = $derived(
+    listing.sticker.code ? ` - ${listing.sticker.code}` : "",
   );
 
   const messagePrefill = $derived(
     listing.intent === "trade"
       ? (channel: string) =>
-          `Hola ${listing.sellerName}, quiero intercambiar mi cromo por el tuyo (${listing.sticker.label}${listing.sticker.code ? ` - ${listing.sticker.code}` : ""}). Por favor contáctame vía ${channel} a: `
+          m.purchase_prefill_trade({
+            sellerName: listing.sellerName,
+            stickerLabel: listing.sticker.label,
+            stickerCode: stickerCodeLabel,
+            channel,
+          })
       : listing.intent === "sale_or_trade"
         ? (channel: string) =>
-            `Hola ${listing.sellerName}, me interesa tu cromo ${listing.sticker.label}${listing.sticker.code ? ` - ${listing.sticker.code}` : ""}. Por favor contáctame vía ${channel} a: `
+            m.purchase_prefill_both({
+              sellerName: listing.sellerName,
+              stickerLabel: listing.sticker.label,
+              stickerCode: stickerCodeLabel,
+              channel,
+            })
         : (channel: string) =>
-            `Hola ${listing.sellerName}, quiero comprar tu cromo ${listing.sticker.label}${listing.sticker.code ? ` - ${listing.sticker.code}` : ""}. Por favor contáctame vía ${channel} a: `,
+            m.purchase_prefill_sale({
+              sellerName: listing.sellerName,
+              stickerLabel: listing.sticker.label,
+              stickerCode: stickerCodeLabel,
+              channel,
+            }),
   );
 
   let trimmedMessage = $derived(message.trim());
@@ -70,8 +91,8 @@
     label: string;
     Icon: typeof MessageCircleIcon;
   }[] = [
-    { id: "whatsapp", label: "WhatsApp", Icon: MessageCircleIcon },
-    { id: "email", label: "Email", Icon: MailIcon },
+    { id: "whatsapp", label: m.common_whatsapp(), Icon: MessageCircleIcon },
+    { id: "email", label: m.common_email(), Icon: MailIcon },
   ];
 
   function resetModalState() {
@@ -108,7 +129,7 @@
     submitError = "";
 
     if (messageTooLong) {
-      submitError = "Máximo 500 caracteres permitidos.";
+      submitError = m.purchase_message_too_long({ count: MAX_MESSAGE_LENGTH });
       return;
     }
 
@@ -122,12 +143,11 @@
       await convex.action(api.contacts.sendSellerContact, {
         listingId: listing._id,
         message: trimmedMessage,
+        locale: getLocale(),
       });
 
       isSending = false;
-      toast.success(
-        "Mensaje enviado. El vendedor recibirá tu contacto por email.",
-      );
+      toast.success(m.purchase_message_sent());
       close();
     } catch (error) {
       submitError = getConvexErrorMessage(error);
@@ -177,7 +197,7 @@
             </p>
           </div>
           <button
-            aria-label="Cerrar"
+            aria-label={m.common_close()}
             class="flex size-8 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-[background-color,transform] duration-150 hover:bg-muted active:scale-[0.96]"
             disabled={isSending}
             onclick={close}
@@ -189,7 +209,7 @@
         <!-- Pills section -->
         <div class="flex flex-col gap-2">
           <p class="text-xs font-medium text-muted-foreground">
-            ¿Cómo quieres que te contacten?
+            {m.purchase_contact_prompt()}
           </p>
           <div class="flex flex-wrap gap-1.5">
             {#each contactOptions as option (option.id)}
@@ -216,12 +236,12 @@
           bind:value={message}
           class="min-h-[88px] leading-relaxed placeholder:text-xs"
           disabled={isSending}
-          placeholder="Escribe un mensaje o selecciona cómo contactarte"
+          placeholder={m.purchase_message_placeholder()}
         />
 
         {#if messageTooLong}
           <p class="text-xs text-destructive">
-            Máximo 500 caracteres permitidos.
+            {m.purchase_message_too_long({ count: MAX_MESSAGE_LENGTH })}
           </p>
         {/if}
 
@@ -235,7 +255,7 @@
           >
             <ShieldIcon class="mt-0.5 size-3.5 shrink-0 text-foreground/70" />
             <p class="text-pretty">
-              Asegúrate de coordinar la transacción en un lugar público.
+              {m.purchase_safety_notice()}
             </p>
           </div>
 
@@ -246,7 +266,7 @@
             >
               <GiftIcon class="mt-0.5 size-3.5 shrink-0 text-foreground/70" />
               <p class="text-pretty">
-                Usarás tu contacto gratuito con vendedores.
+                {m.purchase_free_contact_notice()}
               </p>
             </div>
           {/if}
@@ -259,7 +279,7 @@
             class="border border-border duration-150 active:scale-[0.96]"
             onclick={close}
           >
-            Cancelar
+            {m.common_cancel()}
           </Button>
           <Button
             disabled={!canSubmit}
@@ -267,9 +287,9 @@
             onclick={sendMessage}
           >
             {#if isSending}
-              Enviando
+              {m.login_sending()}
             {:else}
-              Enviar mensaje
+              {m.purchase_send_message()}
             {/if}
           </Button>
         </div>

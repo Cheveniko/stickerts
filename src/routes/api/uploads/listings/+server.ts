@@ -7,6 +7,7 @@ import { AWS_REGION, AWS_S3_BUCKET } from "$env/static/private";
 import { PUBLIC_CONVEX_URL } from "$env/static/public";
 import { api } from "$convex/_generated/api";
 import { getValidAuthToken } from "$lib/auth/server";
+import * as m from "$lib/paraglide/messages";
 
 const maxUploadSizeBytes = 5 * 1024 * 1024;
 
@@ -17,19 +18,21 @@ const extensionByContentType = {
 
 const s3 = new S3Client({ region: AWS_REGION });
 
-const createSignedUploadSchema = z.object({
-  contentType: z.custom<keyof typeof extensionByContentType>(
-    (value) => typeof value === "string" && value in extensionByContentType,
-    { message: "Solo aceptamos imagenes JPG o PNG." },
-  ),
-  size: z
-    .number()
-    .refine(
-      (value) =>
-        Number.isFinite(value) && value > 0 && value <= maxUploadSizeBytes,
-      { message: "La imagen supera el tamano maximo permitido." },
+function createSignedUploadSchema() {
+  return z.object({
+    contentType: z.custom<keyof typeof extensionByContentType>(
+      (value) => typeof value === "string" && value in extensionByContentType,
+      { message: m.error_upload_invalid_type() },
     ),
-});
+    size: z
+      .number()
+      .refine(
+        (value) =>
+          Number.isFinite(value) && value > 0 && value <= maxUploadSizeBytes,
+        { message: m.error_upload_size_limit() },
+      ),
+  });
+}
 
 function createConvexHttpClient(token: string) {
   const client = new ConvexHttpClient(PUBLIC_CONVEX_URL);
@@ -41,13 +44,13 @@ export const POST: RequestHandler = async ({ cookies, request }) => {
   const token = await getValidAuthToken(cookies);
 
   if (!token) {
-    error(401, "No autenticado.");
+    error(401, m.error_upload_unauthenticated());
   }
 
-  const payload = createSignedUploadSchema.safeParse(await request.json());
+  const payload = createSignedUploadSchema().safeParse(await request.json());
 
   if (!payload.success) {
-    error(400, payload.error.issues[0]?.message ?? "Solicitud invalida.");
+    error(400, payload.error.issues[0]?.message ?? m.error_upload_invalid_request());
   }
 
   const { contentType } = payload.data;
@@ -56,11 +59,11 @@ export const POST: RequestHandler = async ({ cookies, request }) => {
   const seller = await convex.query(api.sellers.getCurrentSeller, {});
 
   if (!seller) {
-    error(403, "Solo los sellers pueden subir imagenes.");
+    error(403, m.error_upload_seller_only());
   }
 
   if (seller.status !== "active") {
-    error(403, "Tu cuenta seller no puede subir imagenes en este momento.");
+    error(403, m.error_upload_seller_inactive());
   }
 
   const extension = extensionByContentType[contentType];

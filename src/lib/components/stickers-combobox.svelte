@@ -7,6 +7,7 @@
   import * as Command from "$lib/components/ui/command/index.js";
   import * as Popover from "$lib/components/ui/popover/index.js";
   import { cn } from "$lib/utils";
+  import * as m from "$lib/paraglide/messages";
 
   type Props = {
     stickers: Sticker[];
@@ -20,8 +21,8 @@
 
   let {
     stickers,
-    placeholder = "Selecciona un cromo",
-    emptyMessage = "No se encontraron stickers.",
+    placeholder = m.stickers_combobox_placeholder(),
+    emptyMessage = m.listing_no_stickers_found(),
     value = $bindable<Sticker["_id"] | null>(null),
   }: Props = $props();
 
@@ -91,7 +92,7 @@
   const emptyStateMessage = $derived(
     hasEnoughSearch
       ? emptyMessage
-      : `Escribe al menos ${MIN_SEARCH_LENGTH} caracteres para buscar`,
+      : m.stickers_search_min({ count: MIN_SEARCH_LENGTH }),
   );
 
   const selectedOption = $derived(
@@ -137,8 +138,11 @@
   </Popover.Trigger>
 
   <Popover.Content class="w-(--bits-popover-anchor-width) p-1" align="start">
-    <Command.Root label="Seleccionar cromo" shouldFilter={false}>
-      <Command.Input bind:value={search} placeholder="Buscar sticker" />
+    <Command.Root label={m.stickers_combobox_label()} shouldFilter={false}>
+      <Command.Input
+        bind:value={search}
+        placeholder={m.common_search_sticker()}
+      />
       <Command.List>
         <Command.Empty>{emptyStateMessage}</Command.Empty>
 

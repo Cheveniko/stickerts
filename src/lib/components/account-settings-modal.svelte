@@ -15,6 +15,7 @@
   import Separator from "./ui/separator/separator.svelte";
   import CollectorPassCallout from "./collector-pass-callout.svelte";
   import SellerSuccessModal from "./seller-success-modal.svelte";
+  import * as m from "$lib/paraglide/messages";
 
   type Props = { user: User; seller: CurrentSeller | null; open: boolean };
 
@@ -57,9 +58,7 @@
       close(true);
     } catch (error) {
       signOutError =
-        error instanceof Error
-          ? error.message
-          : "No pudimos cerrar tu sesion. Intenta de nuevo.";
+        error instanceof Error ? error.message : m.account_error_sign_out();
     } finally {
       signingOut = false;
     }
@@ -94,7 +93,7 @@
     >
       <!-- X Close button -->
       <button
-        aria-label="Cerrar"
+        aria-label={m.common_close()}
         class="absolute top-3.5 right-3.5 z-10 flex size-8 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-[background-color,transform] duration-150 hover:bg-muted active:scale-[0.96]"
         disabled={signingOut}
         onclick={handleClose}
@@ -123,7 +122,7 @@
               onclick={() => (activeSection = "profile")}
             >
               <UserIcon class="size-4 shrink-0" />
-              Perfil
+              {m.account_tab_profile()}
             </button>
 
             <!-- Stickers button -->
@@ -139,7 +138,7 @@
                 onclick={() => (activeSection = "stickers")}
               >
                 <LayoutGridIcon class="size-4 shrink-0" />
-                Cromos
+                {m.account_tab_stickers()}
               </button>
             {/if}
           </nav>
@@ -152,7 +151,7 @@
               onclick={handleSignOut}
             >
               <LogOutIcon class="size-4 shrink-0" />
-              {signingOut ? "Saliendo" : "Cerrar sesión"}
+              {signingOut ? m.account_signing_out() : m.account_sign_out()}
             </button>
             {#if signOutError}
               <p role="alert" class="mt-2 px-3 text-sm text-destructive">
@@ -189,7 +188,7 @@
             onclick={handleSignOut}
           >
             <LogOutIcon class="size-4 shrink-0" />
-            {signingOut ? "Saliendo" : "Cerrar sesión"}
+            {signingOut ? m.account_signing_out() : m.account_sign_out()}
           </button>
           {#if signOutError}
             <p role="alert" class="mt-2 px-3 text-sm text-destructive">

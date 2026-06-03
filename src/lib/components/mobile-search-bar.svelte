@@ -25,7 +25,7 @@
 <!-- Collapsed trigger button — mobile only -->
 <button
   type="button"
-  aria-label="Search"
+  aria-label={m.nav_mobile_search_open()}
   onclick={() => (expanded = true)}
   class="flex items-center justify-center rounded-full p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground active:scale-[0.96] md:hidden"
 >
@@ -53,7 +53,7 @@
       type="button"
       onclick={collapse}
       class="flex shrink-0 items-center justify-center rounded-full p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground active:scale-[0.96]"
-      aria-label="Cerrar búsqueda"
+      aria-label={m.nav_mobile_search_close()}
     >
       <X class="size-4" />
     </button>

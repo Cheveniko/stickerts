@@ -9,6 +9,7 @@
   import PlusIcon from "@lucide/svelte/icons/plus";
   import XIcon from "@lucide/svelte/icons/x";
   import type { CurrentSeller } from "$convex/sellers";
+  import * as m from "$lib/paraglide/messages";
 
   type Props = {
     seller: CurrentSeller;
@@ -66,7 +67,7 @@
 
 <!-- FAB Button -->
 <button
-  aria-label="Publicar cromo"
+  aria-label={m.listing_publish_sticker()}
   class="fixed right-6 z-40 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-[transform,box-shadow,filter] duration-150 hover:scale-[1.04] hover:brightness-105 active:scale-[0.96]"
   style="bottom: {bottomOffset}px"
   onclick={() => (open = true)}
@@ -102,10 +103,10 @@
       class="flex items-center justify-between border-b border-border px-6 py-5"
     >
       <h2 id="new-listing-drawer-title" class="text-base font-semibold">
-        Publicar cromo
+        {m.listing_publish_sticker()}
       </h2>
       <button
-        aria-label="Cerrar"
+        aria-label={m.common_close()}
         disabled={isSubmitting}
         class="flex size-8 items-center justify-center rounded-xl text-muted-foreground transition-[background-color,transform] duration-150 hover:bg-muted active:scale-[0.96]"
         onclick={close}
@@ -130,7 +131,7 @@
     >
       <label class="flex cursor-pointer items-center gap-2 text-sm select-none">
         <Switch size="sm" bind:checked={publishMore} disabled={isSubmitting} />
-        Publicar más
+        {m.listing_publish_more()}
       </label>
 
       <div class="flex items-center gap-2">
@@ -140,7 +141,7 @@
           class="border border-border duration-150 active:scale-[0.96]"
           onclick={close}
         >
-          Cancelar
+          {m.common_cancel()}
         </Button>
         <Button
           type="submit"
@@ -148,7 +149,7 @@
           disabled={isSubmitting}
           class="duration-150 active:scale-[0.96]"
         >
-          {isSubmitting ? "Publicando" : "Publicar"}
+          {isSubmitting ? m.listing_publishing() : m.listing_publish()}
         </Button>
       </div>
     </div>

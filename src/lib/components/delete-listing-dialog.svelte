@@ -5,6 +5,7 @@
   import { useConvexClient } from "convex-svelte";
   import { getConvexErrorMessage } from "$lib/convex-errors";
   import type { SellerListingForSettings } from "$convex/listings";
+  import * as m from "$lib/paraglide/messages";
 
   type Props = {
     listing: SellerListingForSettings;
@@ -38,11 +39,13 @@
 <Dialog.Root bind:open>
   <Dialog.Content showCloseButton={false} class="gap-4">
     <Dialog.Header>
-      <Dialog.Title>¿Eliminar publicación?</Dialog.Title>
+      <Dialog.Title>{m.delete_listing_title()}</Dialog.Title>
       <Dialog.Description>
-        Se eliminará <strong class="font-medium text-foreground"
+        {m.delete_listing_description_prefix()}
+        <strong class="font-medium text-foreground"
           >{listing.sticker.label}</strong
-        > de tus publicaciones. Esta acción no se puede deshacer.
+        >
+        {m.delete_listing_description_suffix()}
       </Dialog.Description>
     </Dialog.Header>
 
@@ -57,7 +60,7 @@
         class="border border-border duration-150 active:scale-[0.96]"
         onclick={() => (open = false)}
       >
-        Cancelar
+        {m.common_cancel()}
       </Button>
       <Button
         variant="destructive"
@@ -65,7 +68,7 @@
         class="duration-150 active:scale-[0.96]"
         onclick={handleDelete}
       >
-        {isDeleting ? "Eliminando" : "Eliminar"}
+        {isDeleting ? m.delete_listing_deleting() : m.delete_listing_confirm()}
       </Button>
     </Dialog.Footer>
   </Dialog.Content>

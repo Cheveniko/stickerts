@@ -1,7 +1,9 @@
 import type { Doc } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
 import { ConvexError, v } from "convex/values";
+import * as m from "../lib/paraglide/messages.js";
 import { getCurrentAuthUserId, requireAuthUserId } from "./authHelpers";
+import { messageOptions } from "./i18n";
 import { getCurrentSellerByUserId, type CurrentSeller } from "./sellers";
 
 export type User = Doc<"users">;
@@ -15,14 +17,14 @@ function normalizeName(name: string) {
   if (normalizedName.length === 0) {
     throw new ConvexError({
       code: "INVALID_NAME",
-      message: "El nombre debe tener al menos 1 caracter.",
+      message: m.error_invalid_name({}, messageOptions()),
     });
   }
 
   if (normalizedName.length > maxNameLength) {
     throw new ConvexError({
       code: "INVALID_NAME",
-      message: `El nombre no puede superar ${maxNameLength} caracteres.`,
+      message: m.error_invalid_name({}, messageOptions()),
     });
   }
 

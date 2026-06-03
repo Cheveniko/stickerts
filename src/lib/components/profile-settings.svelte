@@ -9,6 +9,7 @@
   import PencilLineIcon from "@lucide/svelte/icons/pencil-line";
   import GiftIcon from "@lucide/svelte/icons/gift";
   import { fade } from "svelte/transition";
+  import * as m from "$lib/paraglide/messages";
 
   type Props = {
     user: User;
@@ -79,14 +80,14 @@
             if (e.key === "Enter") saveName();
             if (e.key === "Escape") cancelName();
           }}
-          class="-mx-1 w-full min-w-0 rounded-sm border-0 bg-transparent px-1 py-0.5 font-semibold ring-1 ring-ring outline-none text-center sm:text-left"
+          class="-mx-1 w-full min-w-0 rounded-sm border-0 bg-transparent px-1 py-0.5 text-center font-semibold ring-1 ring-ring outline-none sm:text-left"
           {@attach (node) => node.focus()}
         />
       {:else}
         <button
           disabled={isSavingName}
           onclick={startEditing}
-          class="-mx-1 flex w-full cursor-text items-center gap-1.5 rounded-sm px-1 py-0.5 justify-center sm:justify-start transition-colors hover:bg-accent/50"
+          class="-mx-1 flex w-full cursor-text items-center justify-center gap-1.5 rounded-sm px-1 py-0.5 transition-colors hover:bg-accent/50 sm:justify-start"
         >
           <span class="block truncate font-semibold">{user.name}</span>
           <PencilLineIcon class="h-3 w-3 shrink-0 text-muted-foreground" />
@@ -106,14 +107,14 @@
               class="mt-1 inline-flex items-center gap-1.5 rounded-full bg-primary/8 px-2.5 py-1 text-xs font-medium text-foreground"
             >
               <GiftIcon class="size-3 shrink-0" />
-              Tienes 1 contacto con vendedores gratis.
+              {m.profile_free_contact_available()}
             </span>
           {:else}
             <span
               class="mt-1 inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground"
             >
               <GiftIcon class="size-3 shrink-0 opacity-60" />
-              Usaste tu contacto con vendedores gratis.
+              {m.profile_free_contact_used()}
             </span>
           {/if}
         </div>

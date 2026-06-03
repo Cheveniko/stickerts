@@ -5,6 +5,7 @@
   import * as Avatar from "$lib/components/ui/avatar/index.js";
   import { useCurrentUser } from "$lib/hooks/useCurrentUser.svelte";
   import * as m from "$lib/paraglide/messages";
+  import { deLocalizeHref, localizeHref } from "$lib/paraglide/runtime";
   import { cn, getInitial } from "$lib/utils";
   import SearchBar from "$lib/components/search-bar.svelte";
   import MobileSearchBar from "$lib/components/mobile-search-bar.svelte";
@@ -15,10 +16,7 @@
 
   const currentUser = $derived.by(useCurrentUser());
 
-  const isHomePage = $derived(
-    // @ts-ignore
-    page.url.pathname === "/",
-  );
+  const isHomePage = $derived(deLocalizeHref(page.url.pathname) === "/");
 </script>
 
 <header
@@ -29,7 +27,7 @@
   <div
     class="container flex h-14 items-center justify-between gap-4 md:contents"
   >
-    <a href="/" class="shrink-0 text-lg font-bold">Stickerts</a>
+    <a href={localizeHref("/")} class="shrink-0 text-lg font-bold">Stickerts</a>
 
     {#if isHomePage}
       <SearchBar />
@@ -53,7 +51,7 @@
               {getInitial(currentUser.user.name)}
             </Avatar.Fallback>
           </Avatar.Root>
-          Ajustes
+          {m.nav_settings()}
         </button>
       {:else if currentUser.status === "anonymous"}
         <Button onclick={() => (loginOpen = true)}>

@@ -2,6 +2,7 @@
   import TicketIcon from "@lucide/svelte/icons/ticket";
   import ChevronRightIcon from "@lucide/svelte/icons/chevron-right";
   import CollectorPassModal from "./collector-pass-modal.svelte";
+  import * as m from "$lib/paraglide/messages";
 
   type Props = { onsuccess?: () => void };
   let { onsuccess }: Props = $props();
@@ -11,10 +12,9 @@
 
 <div class="flex flex-col gap-3">
   <div class="flex flex-col gap-0.5">
-    <p class="text-sm font-medium">Perfil de vendedor</p>
+    <p class="text-sm font-medium">{m.seller_profile_title()}</p>
     <p class="text-sm text-pretty text-muted-foreground">
-      Activa tu Pase de Coleccionista para publicar stickers, contactarte con
-      dueños de cromos y recibir mensajes directos.
+      {m.collector_pass_teaser_description()}
     </p>
   </div>
   <button
@@ -31,9 +31,9 @@
         />
       </div>
       <div class="flex flex-col gap-0.5">
-        <span class="text-sm font-medium">Pase de Coleccionista</span>
+        <span class="text-sm font-medium">{m.collector_pass_title()}</span>
         <span class="text-xs text-muted-foreground">
-          $1.99 USD · Acceso todo el 2026
+          {m.collector_pass_price_summary()}
         </span>
       </div>
     </div>

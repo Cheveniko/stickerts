@@ -6,6 +6,7 @@
   import EditListingForm from "$lib/components/edit-listing-form.svelte";
   import XIcon from "@lucide/svelte/icons/x";
   import type { SellerListingForSettings } from "$convex/listings";
+  import * as m from "$lib/paraglide/messages";
 
   type Props = {
     listing: SellerListingForSettings;
@@ -63,10 +64,10 @@
       class="flex items-center justify-between border-b border-border px-6 py-5"
     >
       <h2 id="edit-listing-drawer-title" class="text-base font-semibold">
-        Editar publicación
+        {m.listing_edit_title()}
       </h2>
       <button
-        aria-label="Cerrar"
+        aria-label={m.common_close()}
         disabled={isSubmitting}
         class="flex size-8 items-center justify-center rounded-xl text-muted-foreground transition-[background-color,transform] duration-150 hover:bg-muted active:scale-[0.96]"
         onclick={close}
@@ -95,7 +96,7 @@
         class="border border-border duration-150 active:scale-[0.96]"
         onclick={close}
       >
-        Cancelar
+        {m.common_cancel()}
       </Button>
       <Button
         type="submit"
@@ -103,7 +104,7 @@
         disabled={isSubmitting}
         class="duration-150 active:scale-[0.96]"
       >
-        {isSubmitting ? "Guardando" : "Guardar cambios"}
+        {isSubmitting ? m.listing_saving() : m.listing_save_changes()}
       </Button>
     </div>
   </div>

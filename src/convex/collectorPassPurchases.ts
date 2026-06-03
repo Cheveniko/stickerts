@@ -8,12 +8,14 @@ import {
   type QueryCtx,
 } from "./_generated/server";
 import { v } from "convex/values";
+import * as m from "../lib/paraglide/messages.js";
+import { messageOptions, type AppLocale } from "./i18n";
 import { activateSellerForCollectorPass } from "./sellers";
 import type { CurrentUserData } from "./users";
 
 const COLLECTOR_PASS_AMOUNT_CENTS = 199;
 const COLLECTOR_PASS_CURRENCY = "USD";
-const COLLECTOR_PASS_DESCRIPTION = "Pase de Coleccionista Stickerts 2026";
+const localeValidator = v.optional(v.union(v.literal("es"), v.literal("en")));
 
 type CollectorPassPurchase = Doc<"collectorPassPurchases">;
 type CollectorPassPurchaseReadCtx = Pick<QueryCtx, "db">;
@@ -38,11 +40,11 @@ function formatAmountCents(amountCents: number) {
   return (amountCents / 100).toFixed(2);
 }
 
-function parseAmountCents(value: string) {
+function parseAmountCents(value: string, locale: AppLocale) {
   const normalizedValue = value.trim();
 
   if (!/^\d+(?:\.\d{1,2})?$/.test(normalizedValue)) {
-    throw new Error("PayPal devolvio un monto invalido.");
+    throw new Error(m.error_paypal_invalid_amount({}, messageOptions(locale)));
   }
 
   return Math.round(Number(normalizedValue) * 100);
@@ -60,13 +62,13 @@ function getPaypalBaseUrl() {
     : "https://api-m.sandbox.paypal.com";
 }
 
-function getPaypalCredentials() {
+function getPaypalCredentials(locale: AppLocale) {
   const clientId = process.env.PAYPAL_CLIENT_ID?.trim();
   const clientSecret = process.env.PAYPAL_CLIENT_SECRET?.trim();
 
   if (!clientId || !clientSecret) {
     throw new Error(
-      "PayPal no esta configurado para procesar el Pase de Coleccionista.",
+      m.error_paypal_not_configured({}, messageOptions(locale)),
     );
   }
 
@@ -115,7 +117,7 @@ async function readJsonResponse(response: Response) {
   }
 }
 
-async function paypalRequest(path: string, init: RequestInit) {
+async function paypalRequest(path: string, init: RequestInit, locale: AppLocale) {
   const response = await fetch(`${getPaypalBaseUrl()}${path}`, init);
   const data = await readJsonResponse(response);
 
@@ -124,7 +126,7 @@ async function paypalRequest(path: string, init: RequestInit) {
       response.status,
       data,
       extractPaypalErrorMessage(data) ??
-        "PayPal rechazo la solicitud del Pase de Coleccionista.",
+        m.error_paypal_request_rejected({}, messageOptions(locale)),
     );
   }
 
@@ -145,8 +147,8 @@ function isOrderAlreadyCapturedError(error: unknown) {
   );
 }
 
-async function getPaypalAccessToken() {
-  const { clientId, clientSecret } = getPaypalCredentials();
+async function getPaypalAccessToken(locale: AppLocale) {
+  const { clientId, clientSecret } = getPaypalCredentials(locale);
   const data = await paypalRequest("/v1/oauth2/token", {
     method: "POST",
     headers: {
@@ -154,20 +156,24 @@ async function getPaypalAccessToken() {
       "Content-Type": "application/x-www-form-urlencoded",
     },
     body: new URLSearchParams({ grant_type: "client_credentials" }),
-  });
+  }, locale);
 
   if (
     !isRecord(data) ||
     typeof data.access_token !== "string" ||
     !data.access_token
   ) {
-    throw new Error("PayPal no devolvio un token valido.");
+    throw new Error(m.error_paypal_invalid_token({}, messageOptions(locale)));
   }
 
   return data.access_token;
 }
 
-async function createPaypalOrder(accessToken: string, userId: string) {
+async function createPaypalOrder(
+  accessToken: string,
+  userId: string,
+  locale: AppLocale,
+) {
   const data = await paypalRequest("/v2/checkout/orders", {
     method: "POST",
     headers: {
@@ -183,7 +189,7 @@ async function createPaypalOrder(accessToken: string, userId: string) {
       purchase_units: [
         {
           reference_id: "collector_pass_2026",
-          description: COLLECTOR_PASS_DESCRIPTION,
+          description: m.collector_pass_order_description({}, messageOptions(locale)),
           custom_id: userId,
           amount: {
             currency_code: COLLECTOR_PASS_CURRENCY,
@@ -192,16 +198,20 @@ async function createPaypalOrder(accessToken: string, userId: string) {
         },
       ],
     }),
-  });
+  }, locale);
 
   if (!isRecord(data) || typeof data.id !== "string" || !data.id.trim()) {
-    throw new Error("PayPal no devolvio un order id valido.");
+    throw new Error(m.error_paypal_invalid_order_id({}, messageOptions(locale)));
   }
 
   return data.id;
 }
 
-async function capturePaypalOrder(accessToken: string, orderId: string) {
+async function capturePaypalOrder(
+  accessToken: string,
+  orderId: string,
+  locale: AppLocale,
+) {
   return await paypalRequest(
     `/v2/checkout/orders/${encodeURIComponent(orderId)}/capture`,
     {
@@ -212,10 +222,15 @@ async function capturePaypalOrder(accessToken: string, orderId: string) {
         Prefer: "return=representation",
       },
     },
+    locale,
   );
 }
 
-async function getPaypalOrder(accessToken: string, orderId: string) {
+async function getPaypalOrder(
+  accessToken: string,
+  orderId: string,
+  locale: AppLocale,
+) {
   return await paypalRequest(
     `/v2/checkout/orders/${encodeURIComponent(orderId)}`,
     {
@@ -225,37 +240,50 @@ async function getPaypalOrder(accessToken: string, orderId: string) {
         "Content-Type": "application/json",
       },
     },
+    locale,
   );
 }
 
 function validateCapturedOrder(
   data: unknown,
   expectedOrderId: string,
+  locale: AppLocale,
 ) {
   if (!isRecord(data) || data.id !== expectedOrderId) {
-    throw new Error("No pudimos validar la orden de PayPal.");
+    throw new Error(
+      m.error_paypal_validate_order_failed({}, messageOptions(locale)),
+    );
   }
 
   if (data.status !== "COMPLETED") {
-    throw new Error("PayPal no marco la orden como completada.");
+    throw new Error(
+      m.error_paypal_order_not_completed({}, messageOptions(locale)),
+    );
   }
 
   if (!Array.isArray(data.purchase_units) || data.purchase_units.length === 0) {
-    throw new Error("PayPal no devolvio unidades de compra validas.");
+    throw new Error(
+      m.error_paypal_invalid_purchase_units({}, messageOptions(locale)),
+    );
   }
 
   const purchaseUnit = data.purchase_units[0];
 
   if (!isRecord(purchaseUnit)) {
-    throw new Error("PayPal no devolvio una unidad de compra valida.");
+    throw new Error(
+      m.error_paypal_invalid_purchase_unit({}, messageOptions(locale)),
+    );
   }
 
   if (!isRecord(purchaseUnit.amount)) {
-    throw new Error("PayPal no devolvio el monto de la orden.");
+    throw new Error(
+      m.error_paypal_missing_order_amount({}, messageOptions(locale)),
+    );
   }
 
   const orderAmountCents = parseAmountCents(
     String(purchaseUnit.amount.value ?? ""),
+    locale,
   );
   const orderCurrency = String(purchaseUnit.amount.currency_code ?? "");
 
@@ -264,7 +292,7 @@ function validateCapturedOrder(
     orderCurrency !== COLLECTOR_PASS_CURRENCY
   ) {
     throw new Error(
-      "El monto de la orden de PayPal no coincide con el Pase de Coleccionista.",
+      m.error_paypal_order_amount_mismatch({}, messageOptions(locale)),
     );
   }
 
@@ -272,7 +300,7 @@ function validateCapturedOrder(
     !isRecord(purchaseUnit.payments) ||
     !Array.isArray(purchaseUnit.payments.captures)
   ) {
-    throw new Error("PayPal no devolvio la captura del pago.");
+    throw new Error(m.error_paypal_missing_capture({}, messageOptions(locale)));
   }
 
   const capture = purchaseUnit.payments.captures[0];
@@ -282,19 +310,26 @@ function validateCapturedOrder(
     typeof capture.id !== "string" ||
     !capture.id.trim()
   ) {
-    throw new Error("PayPal no devolvio un capture id valido.");
+    throw new Error(
+      m.error_paypal_invalid_capture_id({}, messageOptions(locale)),
+    );
   }
 
   if (capture.status !== "COMPLETED") {
-    throw new Error("PayPal no completo la captura del pago.");
+    throw new Error(
+      m.error_paypal_capture_not_completed({}, messageOptions(locale)),
+    );
   }
 
   if (!isRecord(capture.amount)) {
-    throw new Error("PayPal no devolvio el monto capturado.");
+    throw new Error(
+      m.error_paypal_missing_capture_amount({}, messageOptions(locale)),
+    );
   }
 
   const captureAmountCents = parseAmountCents(
     String(capture.amount.value ?? ""),
+    locale,
   );
   const captureCurrency = String(capture.amount.currency_code ?? "");
 
@@ -303,7 +338,7 @@ function validateCapturedOrder(
     captureCurrency !== COLLECTOR_PASS_CURRENCY
   ) {
     throw new Error(
-      "El monto capturado en PayPal no coincide con el Pase de Coleccionista.",
+      m.error_paypal_capture_amount_mismatch({}, messageOptions(locale)),
     );
   }
 
@@ -314,7 +349,7 @@ function validateCapturedOrder(
   };
 }
 
-async function requireCurrentUser(ctx: ActionCtx) {
+async function requireCurrentUser(ctx: ActionCtx, locale: AppLocale) {
   const currentUser: CurrentUserData | null = await ctx.runQuery(
     api.users.getCurrentUser,
     {},
@@ -322,7 +357,7 @@ async function requireCurrentUser(ctx: ActionCtx) {
 
   if (!currentUser) {
     throw new Error(
-      "Debes iniciar sesion para comprar el Pase de Coleccionista.",
+      m.error_collector_pass_auth_required({}, messageOptions(locale)),
     );
   }
 
@@ -390,13 +425,19 @@ export const upsertPendingPurchaseInternal = internalMutation({
     amountCents: v.number(),
     currency: v.string(),
     createdAt: v.number(),
+    locale: localeValidator,
   },
   handler: async (ctx, args) => {
     const existingPurchase = await getPurchaseByUserId(ctx, args.userId);
 
     if (existingPurchase) {
       if (existingPurchase.completedAt) {
-        throw new Error("Este usuario ya compro el Pase de Coleccionista.");
+        throw new Error(
+          m.error_collector_pass_already_purchased(
+            {},
+            messageOptions(args.locale),
+          ),
+        );
       }
 
       await ctx.db.patch(existingPurchase._id, {
@@ -419,17 +460,23 @@ export const finalizePurchaseInternal = internalMutation({
     paypalOrderId: v.string(),
     paypalCaptureId: v.string(),
     completedAt: v.number(),
+    locale: localeValidator,
   },
   handler: async (ctx, args) => {
     const purchase = await getPurchaseByUserId(ctx, args.userId);
 
     if (!purchase) {
-      throw new Error("No encontramos una compra pendiente para este usuario.");
+      throw new Error(
+        m.error_collector_pass_pending_purchase_user_not_found(
+          {},
+          messageOptions(args.locale),
+        ),
+      );
     }
 
     if (purchase.paypalOrderId !== args.paypalOrderId) {
       throw new Error(
-        "La orden de PayPal no coincide con la compra pendiente.",
+        m.error_collector_pass_order_mismatch({}, messageOptions(args.locale)),
       );
     }
 
@@ -439,13 +486,21 @@ export const finalizePurchaseInternal = internalMutation({
     );
 
     if (duplicateCapture && duplicateCapture._id !== purchase._id) {
-      throw new Error("Esta captura de PayPal ya fue procesada.");
+      throw new Error(
+        m.error_collector_pass_capture_processed(
+          {},
+          messageOptions(args.locale),
+        ),
+      );
     }
 
     if (purchase.completedAt) {
       if (purchase.paypalCaptureId !== args.paypalCaptureId) {
         throw new Error(
-          "Esta compra ya fue completada con otra captura de PayPal.",
+          m.error_collector_pass_completed_with_other_capture(
+            {},
+            messageOptions(args.locale),
+          ),
         );
       }
 
@@ -453,6 +508,7 @@ export const finalizePurchaseInternal = internalMutation({
         ctx,
         args.userId,
         purchase.completedAt,
+        args.locale,
       );
 
       return { sellerId, purchaseId: purchase._id };
@@ -462,6 +518,7 @@ export const finalizePurchaseInternal = internalMutation({
       ctx,
       args.userId,
       args.completedAt,
+      args.locale,
     );
 
     await ctx.db.patch(purchase._id, {
@@ -474,12 +531,17 @@ export const finalizePurchaseInternal = internalMutation({
 });
 
 export const createCollectorPassOrder = action({
-  args: {},
-  handler: async (ctx) => {
-    const currentUser = await requireCurrentUser(ctx);
+  args: {
+    locale: localeValidator,
+  },
+  handler: async (ctx, args) => {
+    const locale = args.locale ?? "es";
+    const currentUser = await requireCurrentUser(ctx, locale);
 
     if (currentUser.seller) {
-      throw new Error("Tu perfil ya tiene acceso de seller activo.");
+      throw new Error(
+        m.error_collector_pass_user_has_seller({}, messageOptions(locale)),
+      );
     }
 
     const existingPurchase: CollectorPassPurchase | null = await ctx.runQuery(
@@ -488,14 +550,13 @@ export const createCollectorPassOrder = action({
     );
 
     if (existingPurchase?.completedAt) {
-      throw new Error("Ya compraste el Pase de Coleccionista.");
+      throw new Error(
+        m.error_collector_pass_already_purchased({}, messageOptions(locale)),
+      );
     }
 
-    const accessToken = await getPaypalAccessToken();
-    const paypalOrderId = await createPaypalOrder(
-      accessToken,
-      currentUser.user._id,
-    );
+    const accessToken = await getPaypalAccessToken(locale);
+    const paypalOrderId = await createPaypalOrder(accessToken, currentUser.user._id, locale);
     const createdAt = Date.now();
 
     await ctx.runMutation(
@@ -506,6 +567,7 @@ export const createCollectorPassOrder = action({
         amountCents: COLLECTOR_PASS_AMOUNT_CENTS,
         currency: COLLECTOR_PASS_CURRENCY,
         createdAt,
+        locale,
       },
     );
 
@@ -520,9 +582,11 @@ export const createCollectorPassOrder = action({
 export const captureCollectorPassOrder = action({
   args: {
     paypalOrderId: v.string(),
+    locale: localeValidator,
   },
   handler: async (ctx, args) => {
-    const currentUser = await requireCurrentUser(ctx);
+    const locale = args.locale ?? "es";
+    const currentUser = await requireCurrentUser(ctx, locale);
     const purchase: CollectorPassPurchase | null = await ctx.runQuery(
       internal.collectorPassPurchases.getPurchaseByUserIdInternal,
       { userId: currentUser.user._id },
@@ -530,13 +594,16 @@ export const captureCollectorPassOrder = action({
 
     if (!purchase) {
       throw new Error(
-        "No encontramos una compra pendiente del Pase de Coleccionista.",
+        m.error_collector_pass_pending_purchase_not_found(
+          {},
+          messageOptions(locale),
+        ),
       );
     }
 
     if (purchase.paypalOrderId !== args.paypalOrderId) {
       throw new Error(
-        "La orden de PayPal no coincide con la compra pendiente.",
+        m.error_collector_pass_order_mismatch({}, messageOptions(locale)),
       );
     }
 
@@ -547,25 +614,27 @@ export const captureCollectorPassOrder = action({
       };
     }
 
-    const accessToken = await getPaypalAccessToken();
+    const accessToken = await getPaypalAccessToken(locale);
     let paypalOrderData: unknown;
 
     try {
       paypalOrderData = await capturePaypalOrder(
         accessToken,
         args.paypalOrderId,
+        locale,
       );
     } catch (error) {
       if (!isOrderAlreadyCapturedError(error)) {
         throw error;
       }
 
-      paypalOrderData = await getPaypalOrder(accessToken, args.paypalOrderId);
+      paypalOrderData = await getPaypalOrder(accessToken, args.paypalOrderId, locale);
     }
 
     const capture = validateCapturedOrder(
       paypalOrderData,
       args.paypalOrderId,
+      locale,
     );
 
     await ctx.runMutation(
@@ -575,6 +644,7 @@ export const captureCollectorPassOrder = action({
         paypalOrderId: args.paypalOrderId,
         paypalCaptureId: capture.paypalCaptureId,
         completedAt: Date.now(),
+        locale,
       },
     );
 

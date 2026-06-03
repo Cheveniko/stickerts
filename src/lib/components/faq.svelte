@@ -1,37 +1,32 @@
 <script lang="ts">
   import ChevronDown from "@lucide/svelte/icons/chevron-down";
   import { fly } from "svelte/transition";
+  import * as m from "$lib/paraglide/messages";
 
   const faqs = [
     {
-      question: "¿Qué es Stickerts?",
-      answer:
-        "Stickerts te ayuda a completar tu álbum conectándote con otros coleccionistas para comprar, vender e intercambiar cromos.",
+      question: m.faq_q1(),
+      answer: m.faq_a1(),
     },
     {
-      question: "¿Cómo me contacto con un vendedor?",
-      answer:
-        "Haz clic en el botón del cromo que te interesa. Te redirigiremos con un mensaje pre-escrito a WhatsApp o al correo del vendedor. Desde ahí coordinan el precio, el método de pago y la entrega directamente.",
+      question: m.faq_q2(),
+      answer: m.faq_a2(),
     },
     {
-      question: "¿Qué es el Pase de Coleccionista?",
-      answer:
-        "Es un acceso único de $1.99 USD que desbloquea tu perfil de vendedor durante todo el 2026. Con él puedes publicar tus cromos, contactar vendedores y recibir mensajes directos de compradores.",
+      question: m.faq_q3(),
+      answer: m.faq_a3(),
     },
     {
-      question: "¿Puedo usar Stickerts sin el Pase?",
-      answer:
-        "Sí. Todos los usuarios registrados tienen 1 contacto gratuito para probar la plataforma. Si quieres publicar tus propios cromos o contactar a más vendedores, necesitarás el Pase de Coleccionista.",
+      question: m.faq_q4(),
+      answer: m.faq_a4(),
     },
     {
-      question: "¿Cómo publico mis cromos?",
-      answer:
-        'Necesitas el Pase de Coleccionista. Una vez activado, toca el botón "+" en la esquina inferior derecha. Sube una foto, describe el cromo, elige si lo vendes, intercambias o ambas cosas, y ya está visible para otros coleccionistas.',
+      question: m.faq_q5(),
+      answer: m.faq_a5(),
     },
     {
-      question: "¿Cómo funciona el intercambio?",
-      answer:
-        'Al publicar un cromo puedes marcarlo como "Intercambio". El comprador te contacta y le puedes ofrecer tus repetidos a cambio del cromo que él tiene. Todo se coordina directamente entre ustedes por WhatsApp, correo o el medio que acuerden.',
+      question: m.faq_q6(),
+      answer: m.faq_a6(),
     },
   ];
 
@@ -48,7 +43,7 @@
     style="text-wrap: balance"
     transition:fly={{ y: 8, duration: 300, delay: 200 }}
   >
-    Preguntas frecuentes
+    {m.faq_title()}
   </h2>
 
   <div

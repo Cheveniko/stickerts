@@ -8,6 +8,7 @@
   import ImagePlusIcon from "@lucide/svelte/icons/image-plus";
   import RefreshCwIcon from "@lucide/svelte/icons/refresh-cw";
   import { cn } from "$lib/utils";
+  import * as m from "$lib/paraglide/messages";
 
   type Props = {
     file?: File | null;
@@ -40,9 +41,11 @@
     if (
       !LISTING_IMAGE_ACCEPTED_TYPES.includes(f.type as ListingImageContentType)
     ) {
-      return "Solo JPG o PNG";
+      return m.image_uploader_type_error();
     }
-    if (f.size > maxSizeMb * 1024 * 1024) return `Máx ${maxSizeMb}MB`;
+    if (f.size > maxSizeMb * 1024 * 1024) {
+      return m.image_uploader_size_error({ maxSizeMb });
+    }
     return null;
   }
 
@@ -75,7 +78,7 @@
       internalError =
         processingError instanceof Error
           ? processingError.message
-          : "No pudimos procesar la imagen seleccionada.";
+          : m.image_uploader_processing_error();
       file = null;
       revokePreviewUrl(preview);
       preview = null;
@@ -141,7 +144,7 @@
   <div
     role="button"
     tabindex="0"
-    aria-label="Subir imagen"
+    aria-label={m.image_uploader_aria_label()}
     aria-disabled={isProcessing}
     class="group relative aspect-[4/3] w-full overflow-hidden rounded-2xl border-2 border-dashed transition-[border-color,background-color,transform,opacity] duration-150 select-none
 			{visiblePreview
@@ -167,7 +170,7 @@
       <!-- Preview state -->
       <img
         src={visiblePreview}
-        alt="Preview del sticker"
+        alt={m.image_uploader_preview_alt()}
         class="mx-auto h-full object-cover"
       />
 
@@ -183,7 +186,7 @@
           <p
             class="rounded-xl bg-black/60 px-3 py-1.5 text-xs font-medium text-white backdrop-blur-sm"
           >
-            Procesando imagen
+            {m.image_uploader_processing()}
           </p>
         {:else}
           <button
@@ -191,7 +194,7 @@
             class="flex items-center gap-1.5 rounded-xl bg-black/50 px-3 py-1.5 text-xs font-medium text-white backdrop-blur-sm transition-colors duration-150 hover:bg-black/70 active:scale-[0.96]"
           >
             <RefreshCwIcon class="size-3" />
-            Cambiar
+            {m.image_uploader_change()}
           </button>
         {/if}
       </div>
@@ -213,11 +216,11 @@
         <div>
           <p class="text-sm font-medium text-foreground">
             {isProcessing
-              ? "Procesando imagen..."
-              : "Arrastra o haz clic para subir"}
+              ? m.image_uploader_processing_ellipsis()
+              : m.image_uploader_drag_or_click()}
           </p>
           <p class="mt-0.5 text-xs text-muted-foreground">
-            JPG · PNG · Máx {maxSizeMb}MB
+            {m.image_uploader_format_hint({ maxSizeMb })}
           </p>
         </div>
       </div>

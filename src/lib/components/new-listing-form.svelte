@@ -15,8 +15,8 @@
     CURRENCIES,
   } from "$lib/location-data";
   import {
+    createNewListingFormSchema,
     createSignedUploadResponseSchema,
-    newListingFormSchema,
     listingIntents,
     type ListingIntent,
   } from "$lib/schemas";
@@ -25,6 +25,7 @@
   import { page } from "$app/state";
   import { useConvexClient } from "convex-svelte";
   import { cn } from "$lib/utils";
+  import * as m from "$lib/paraglide/messages";
 
   type Props = {
     id?: string;
@@ -112,7 +113,7 @@
 
     submitError = "";
 
-    const parsedForm = newListingFormSchema.safeParse({
+    const parsedForm = createNewListingFormSchema().safeParse({
       imageFile,
       intent,
       selectedStickerId,
@@ -126,8 +127,7 @@
 
     if (!parsedForm.success) {
       submitError =
-        parsedForm.error.issues[0]?.message ??
-        "Revisa los datos antes de publicar.";
+        parsedForm.error.issues[0]?.message ?? m.listing_form_review_error();
       return;
     }
 
@@ -157,7 +157,7 @@
       );
 
       if (!parsedUploadResponse.success) {
-        throw new Error("No pudimos preparar la subida de la imagen.");
+        throw new Error(m.listing_form_upload_prepare_error());
       }
 
       const { signedUrl, imageKey } = parsedUploadResponse.data;
@@ -185,8 +185,7 @@
       didSucceed = true;
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        submitError =
-          "No pudimos subir la imagen o publicar el cromo. Inténtalo de nuevo.";
+        submitError = m.listing_form_upload_or_publish_error();
       } else if (
         typeof error === "object" &&
         error !== null &&
@@ -194,8 +193,7 @@
       ) {
         submitError = getConvexErrorMessage(error);
       } else {
-        submitError =
-          "No pudimos subir la imagen o publicar el cromo. Inténtalo de nuevo.";
+        submitError = m.listing_form_upload_or_publish_error();
       }
     } finally {
       submitting = false;
@@ -222,27 +220,27 @@
         )}
       >
         {intentOption === "sale"
-          ? "Venta"
+          ? m.listing_intent_sale()
           : intentOption === "trade"
-            ? "Intercambio"
-            : "Ambos"}
+            ? m.listing_intent_trade()
+            : m.listing_intent_both()}
       </button>
     {/each}
   </div>
 
   <!-- Image uploader -->
   <div class="flex flex-col gap-1.5">
-    <Label>Foto del cromo</Label>
+    <Label>{m.listing_label_photo()}</Label>
     <ImageUploader bind:file={imageFile} />
   </div>
 
   <!-- Sticker field -->
   <div class="flex flex-col gap-1.5">
-    <Label>Cromo</Label>
+    <Label>{m.listing_label_sticker()}</Label>
     <StickersCombobox
       {stickers}
-      placeholder="Buscar cromos"
-      emptyMessage="No se encontraron stickers."
+      placeholder={m.listing_search_stickers()}
+      emptyMessage={m.listing_no_stickers_found()}
       bind:value={selectedStickerId}
     />
   </div>
@@ -251,7 +249,7 @@
   {#if isForSale}
     <div class="grid grid-cols-2 gap-3">
       <div class="flex flex-col gap-1.5">
-        <Label for="listing-precio">Precio</Label>
+        <Label for="listing-precio">{m.listing_label_price()}</Label>
         <Input
           id="listing-precio"
           type="number"
@@ -263,7 +261,7 @@
         />
       </div>
       <div class="flex flex-col gap-1.5">
-        <Label for="listing-cantidad">Cantidad</Label>
+        <Label for="listing-cantidad">{m.listing_label_quantity()}</Label>
         <Input
           id="listing-cantidad"
           type="number"
@@ -277,7 +275,7 @@
     </div>
   {:else}
     <div class="flex flex-col gap-1.5">
-      <Label for="listing-cantidad">Cantidad</Label>
+      <Label for="listing-cantidad">{m.listing_label_quantity()}</Label>
       <Input
         id="listing-cantidad"
         type="number"
@@ -293,7 +291,7 @@
   <!-- Country & City row -->
   <div class="grid grid-cols-2 gap-3">
     <div class="flex flex-col gap-1.5">
-      <Label>País</Label>
+      <Label>{m.common_country()}</Label>
       <Select.Root
         type="single"
         value={selectedCountryCode}
@@ -303,7 +301,7 @@
           {#if selectedCountry}
             {selectedCountry.flagEmoji} {selectedCountry.name}
           {:else}
-            <span class="text-muted-foreground">País</span>
+            <span class="text-muted-foreground">{m.common_country()}</span>
           {/if}
         </Select.Trigger>
         <Select.Content class="max-h-60">
@@ -318,7 +316,7 @@
     </div>
 
     <div class="flex flex-col gap-1.5">
-      <Label>Ciudad</Label>
+      <Label>{m.common_city()}</Label>
       <Select.Root
         type="single"
         value={selectedCitySlug}
@@ -327,11 +325,12 @@
       >
         <Select.Trigger class="h-9 w-full border-input bg-card text-sm">
           {#if !selectedCountryCode}
-            <span class="text-muted-foreground">País primero</span>
+            <span class="text-muted-foreground">{m.common_country_first()}</span
+            >
           {:else if selectedCity}
             {selectedCity.name}
           {:else}
-            <span class="text-muted-foreground">Ciudad</span>
+            <span class="text-muted-foreground">{m.common_city()}</span>
           {/if}
         </Select.Trigger>
         <Select.Content class="max-h-60">
@@ -346,7 +345,7 @@
   <!-- Currency row -->
   {#if isForSale}
     <div class="flex flex-col gap-1.5">
-      <Label>Moneda</Label>
+      <Label>{m.common_currency()}</Label>
       <Select.Root
         type="single"
         value={selectedCurrency}
@@ -357,7 +356,9 @@
             {selectedCurrencyData.symbol}
             {selectedCurrencyData.code} - {selectedCurrencyData.name}
           {:else}
-            <span class="text-muted-foreground">Selecciona una moneda</span>
+            <span class="text-muted-foreground"
+              >{m.common_select_currency()}</span
+            >
           {/if}
         </Select.Trigger>
         <Select.Content class="max-h-60">
@@ -375,18 +376,18 @@
   <!-- Trade fields -->
   {#if isForTrade}
     <div class="flex flex-col gap-1.5">
-      <Label>Cromos que te interesan</Label>
+      <Label>{m.listing_label_wanted_stickers()}</Label>
       <StickersMultiCombobox {stickers} bind:value={wantedStickerIds} />
     </div>
     <div class="flex flex-col gap-1.5">
       <Label for="listing-trade-description">
-        Descripción del intercambio
-        <span class="text-xs text-muted-foreground">(Opcional)</span>
+        {m.listing_label_trade_description()}
+        <span class="text-xs text-muted-foreground">{m.common_optional()}</span>
       </Label>
       <Textarea
         id="listing-trade-description"
         bind:value={tradeDescription}
-        placeholder="(Busco cromos especiales) (Cambio por 3 cromos) etc"
+        placeholder={m.listing_trade_description_placeholder()}
         class="border-input bg-card"
       />
     </div>

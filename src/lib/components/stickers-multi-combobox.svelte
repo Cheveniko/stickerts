@@ -8,6 +8,7 @@
   import * as Command from "$lib/components/ui/command/index.js";
   import * as Popover from "$lib/components/ui/popover/index.js";
   import { cn } from "$lib/utils";
+  import * as m from "$lib/paraglide/messages";
 
   type Props = {
     stickers: Sticker[];
@@ -21,8 +22,8 @@
 
   let {
     stickers,
-    placeholder = "Buscar cromos para intercambiar",
-    emptyMessage = "No se encontraron stickers.",
+    placeholder = m.listing_search_stickers(),
+    emptyMessage = m.listing_no_stickers_found(),
     value = $bindable<Sticker["_id"][]>([]),
   }: Props = $props();
 
@@ -92,7 +93,7 @@
   const emptyStateMessage = $derived(
     hasEnoughSearch
       ? emptyMessage
-      : `Escribe al menos ${MIN_SEARCH_LENGTH} caracteres para buscar`,
+      : m.stickers_search_min({ count: MIN_SEARCH_LENGTH }),
   );
 
   const selectedOptions = $derived(
@@ -103,8 +104,8 @@
     value.length === 0
       ? placeholder
       : value.length === 1
-        ? "1 cromo seleccionado"
-        : `${value.length} cromos seleccionados`,
+        ? m.stickers_multicombobox_selected_one()
+        : m.stickers_multicombobox_selected_many({ count: value.length }),
   );
 
   function isSelected(id: Sticker["_id"]) {
@@ -156,8 +157,14 @@
     </Popover.Trigger>
 
     <Popover.Content class="w-(--bits-popover-anchor-width) p-1" align="start">
-      <Command.Root label="Seleccionar cromos" shouldFilter={false}>
-        <Command.Input bind:value={search} placeholder="Buscar sticker" />
+      <Command.Root
+        label={m.stickers_multicombobox_label()}
+        shouldFilter={false}
+      >
+        <Command.Input
+          bind:value={search}
+          placeholder={m.common_search_sticker()}
+        />
         <Command.List>
           <Command.Empty>{emptyStateMessage}</Command.Empty>
 
@@ -191,8 +198,10 @@
           <button
             type="button"
             onclick={() => removeSticker(option.id)}
-            class="ml-0.5 rounded-full p-0.5 opacity-60 transition-opacity hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            aria-label={`Eliminar ${option.label}`}
+            class="ml-0.5 rounded-full p-0.5 opacity-60 transition-opacity hover:opacity-100 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+            aria-label={m.stickers_multicombobox_remove({
+              label: option.label,
+            })}
           >
             <XIcon class="size-3" />
           </button>

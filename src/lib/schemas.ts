@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { Id } from "$convex/_generated/dataModel";
+import * as m from "$lib/paraglide/messages";
 
 const PRICE_DECIMAL_PRECISION_EPSILON = 1e-6;
 
@@ -10,128 +11,148 @@ export const listingSearchParamsSchema = z.object({
   q: z.string().default(""),
 });
 
-const requiredFileSchema = z.custom<File>(
-  (value) => value instanceof File,
-  "Selecciona una imagen para publicar tu cromo.",
-);
+function createRequiredFileSchema() {
+  return z.custom<File>(
+    (value) => value instanceof File,
+    m.error_upload_image_required(),
+  );
+}
 
-const requiredStickerIdSchema = z.custom<Id<"stickers">>(
-  (value) => typeof value === "string" && value.length > 0,
-  "Selecciona el cromo que quieres publicar.",
-);
+function createRequiredStickerIdSchema() {
+  return z.custom<Id<"stickers">>(
+    (value) => typeof value === "string" && value.length > 0,
+    m.error_upload_sticker_required(),
+  );
+}
 
-const requiredCitySlugSchema = z.custom<string>(
-  (value) => typeof value === "string" && value.length > 0,
-  "Selecciona una ciudad.",
-);
+function createRequiredCitySlugSchema() {
+  return z.custom<string>(
+    (value) => typeof value === "string" && value.length > 0,
+    m.error_upload_city_required(),
+  );
+}
 
-const requiredCurrencySchema = z.custom<string>(
-  (value) => typeof value === "string" && value.length > 0,
-  "Selecciona una moneda.",
-);
+function createRequiredCurrencySchema() {
+  return z.custom<string>(
+    (value) => typeof value === "string" && value.length > 0,
+    m.error_upload_currency_required(),
+  );
+}
 
 const listingIntentSchema = z.enum(listingIntents).default("sale");
 
-const priceSchema = z
-  .custom<number>(
-    (value) => typeof value === "number" && Number.isFinite(value),
-    "Ingresa un precio mayor a 0.",
-  )
-  .refine((value) => value > 0, "Ingresa un precio mayor a 0.");
+function createPriceSchema() {
+  return z
+    .custom<number>(
+      (value) => typeof value === "number" && Number.isFinite(value),
+      m.error_upload_price_required(),
+    )
+    .refine((value) => value > 0, m.error_upload_price_required());
+}
 
-const optionalPriceSchema = z.union([priceSchema, z.null(), z.undefined()]);
+function createOptionalPriceSchema() {
+  return z.union([createPriceSchema(), z.null(), z.undefined()]);
+}
 
-const quantitySchema = z
-  .custom<number>(
-    (value) => typeof value === "number" && Number.isFinite(value),
-    "Ingresa una cantidad entera mayor a 0.",
-  )
-  .refine(
-    (value) => Number.isInteger(value) && value > 0,
-    "Ingresa una cantidad entera mayor a 0.",
-  );
+function createQuantitySchema() {
+  return z
+    .custom<number>(
+      (value) => typeof value === "number" && Number.isFinite(value),
+      m.error_upload_quantity_required(),
+    )
+    .refine(
+      (value) => Number.isInteger(value) && value > 0,
+      m.error_upload_quantity_required(),
+    );
+}
 
-export const newListingFormSchema = z
-  .object({
-    imageFile: requiredFileSchema,
-    intent: listingIntentSchema,
-    selectedStickerId: requiredStickerIdSchema,
-    selectedCitySlug: requiredCitySlugSchema,
-    selectedCurrency: z.string().optional(),
-    price: optionalPriceSchema,
-    quantity: quantitySchema,
-    tradeDescription: z.string().optional(),
-    wantedStickerIds: z.array(requiredStickerIdSchema).optional(),
-  })
-  .superRefine((data, ctx) => {
-    const isForSale = data.intent === "sale" || data.intent === "sale_or_trade";
+export function createNewListingFormSchema() {
+  const requiredStickerIdSchema = createRequiredStickerIdSchema();
+  const requiredCurrencySchema = createRequiredCurrencySchema();
 
-    if (isForSale) {
+  return z
+    .object({
+      imageFile: createRequiredFileSchema(),
+      intent: listingIntentSchema,
+      selectedStickerId: requiredStickerIdSchema,
+      selectedCitySlug: createRequiredCitySlugSchema(),
+      selectedCurrency: z.string().optional(),
+      price: createOptionalPriceSchema(),
+      quantity: createQuantitySchema(),
+      tradeDescription: z.string().optional(),
+      wantedStickerIds: z.array(requiredStickerIdSchema).optional(),
+    })
+    .superRefine((data, ctx) => {
+      const isForSale =
+        data.intent === "sale" || data.intent === "sale_or_trade";
+
+      if (isForSale) {
+        if (data.price === null || data.price === undefined) {
+          ctx.addIssue({
+            code: "custom",
+            path: ["price"],
+            message: m.error_upload_price_required(),
+          });
+        }
+
+        if (!requiredCurrencySchema.safeParse(data.selectedCurrency).success) {
+          ctx.addIssue({
+            code: "custom",
+            path: ["selectedCurrency"],
+            message: m.error_upload_currency_required(),
+          });
+        }
+      }
+
       if (data.price === null || data.price === undefined) {
+        return;
+      }
+
+      const rawPriceCents = data.price * 100;
+      const roundedPriceCents = Math.round(rawPriceCents);
+
+      if (
+        Math.abs(rawPriceCents - roundedPriceCents) >
+        PRICE_DECIMAL_PRECISION_EPSILON
+      ) {
         ctx.addIssue({
           code: "custom",
           path: ["price"],
-          message: "Ingresa un precio mayor a 0.",
+          message: m.error_upload_price_decimals(),
         });
       }
-
-      if (!requiredCurrencySchema.safeParse(data.selectedCurrency).success) {
-        ctx.addIssue({
-          code: "custom",
-          path: ["selectedCurrency"],
-          message: "Selecciona una moneda.",
-        });
-      }
-    }
-
-    if (data.price === null || data.price === undefined) {
-      return;
-    }
-
-    const rawPriceCents = data.price * 100;
-    const roundedPriceCents = Math.round(rawPriceCents);
-
-    if (
-      Math.abs(rawPriceCents - roundedPriceCents) >
-      PRICE_DECIMAL_PRECISION_EPSILON
-    ) {
-      ctx.addIssue({
-        code: "custom",
-        path: ["price"],
-        message: "El precio puede tener máximo 2 decimales.",
-      });
-    }
-  })
-  .transform((data) => ({
-    imageFile: data.imageFile,
-    intent: data.intent,
-    stickerId: data.selectedStickerId,
-    citySlug: data.selectedCitySlug,
-    currency:
-      data.selectedCurrency === undefined || data.selectedCurrency === ""
-        ? undefined
-        : data.selectedCurrency,
-    quantityAvailable: data.quantity,
-    priceCents:
-      data.price === null || data.price === undefined
-        ? undefined
-        : Math.round(data.price * 100),
-    tradeDescription:
-      data.tradeDescription === undefined || data.tradeDescription === ""
-        ? undefined
-        : data.tradeDescription,
-    wantedStickerIds:
-      data.wantedStickerIds === undefined || data.wantedStickerIds.length === 0
-        ? undefined
-        : data.wantedStickerIds,
-  }));
+    })
+    .transform((data) => ({
+      imageFile: data.imageFile,
+      intent: data.intent,
+      stickerId: data.selectedStickerId,
+      citySlug: data.selectedCitySlug,
+      currency:
+        data.selectedCurrency === undefined || data.selectedCurrency === ""
+          ? undefined
+          : data.selectedCurrency,
+      quantityAvailable: data.quantity,
+      priceCents:
+        data.price === null || data.price === undefined
+          ? undefined
+          : Math.round(data.price * 100),
+      tradeDescription:
+        data.tradeDescription === undefined || data.tradeDescription === ""
+          ? undefined
+          : data.tradeDescription,
+      wantedStickerIds:
+        data.wantedStickerIds === undefined || data.wantedStickerIds.length === 0
+          ? undefined
+          : data.wantedStickerIds,
+    }));
+}
 
 export const createSignedUploadResponseSchema = z.object({
   signedUrl: z.url(),
   imageKey: z.string().min(1),
 });
 
-export type NewListingFormData = z.output<typeof newListingFormSchema>;
+export type NewListingFormData = z.output<ReturnType<typeof createNewListingFormSchema>>;
 export type CreateSignedUploadResponse = z.infer<
   typeof createSignedUploadResponseSchema
 >;

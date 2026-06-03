@@ -7,6 +7,8 @@ import {
   type ActionCtx,
 } from "./_generated/server";
 import { ConvexError, v } from "convex/values";
+import * as m from "../lib/paraglide/messages.js";
+import { messageOptions, type AppLocale } from "./i18n";
 import { resend, RESEND_NO_REPLY_FROM } from "./resend";
 import type { CurrentUserData, User } from "./users";
 import type { Listing } from "./listings";
@@ -15,6 +17,7 @@ import type { Sticker } from "./stickers";
 
 const MAX_MESSAGE_LENGTH = 500;
 const CONTACT_RATE_LIMIT_WINDOW_MS = 24 * 60 * 60 * 1000;
+const localeValidator = v.optional(v.union(v.literal("es"), v.literal("en")));
 
 type ContactTarget = {
   listing: Listing;
@@ -31,28 +34,39 @@ function buildStickerName(sticker: Doc<"stickers">) {
   return sticker.code ? `${sticker.label} (${sticker.code})` : sticker.label;
 }
 
-function buildEmailSubject(sticker: Doc<"stickers">) {
-  return `Nuevo interesado en tu cromo ${buildStickerName(sticker)}`;
+function buildEmailSubject(sticker: Doc<"stickers">, locale: AppLocale) {
+  return m.email_contact_subject(
+    { stickerName: buildStickerName(sticker) },
+    messageOptions(locale),
+  );
 }
 
 function buildEmailText(args: {
+  locale: AppLocale;
   sellerName: string;
   sticker: Doc<"stickers">;
   message: string;
 }) {
   return [
-    `Hola ${args.sellerName},`,
+    m.email_contact_greeting(
+      { sellerName: args.sellerName },
+      messageOptions(args.locale),
+    ),
     "",
-    `Recibiste un nuevo mensaje sobre tu cromo ${buildStickerName(args.sticker)} en Stickerts.`,
+    m.email_contact_intro(
+      { stickerName: buildStickerName(args.sticker) },
+      messageOptions(args.locale),
+    ),
     "",
-    "Mensaje del comprador:",
+    m.email_contact_message_label({}, messageOptions(args.locale)),
     args.message,
     "",
-    "Te recomendamos coordinar la transacción en un lugar público.",
+    m.email_contact_safety_notice({}, messageOptions(args.locale)),
   ].join("\n");
 }
 
 function buildEmailHtml(args: {
+  locale: AppLocale;
   sellerName: string;
   sticker: Doc<"stickers">;
   message: string;
@@ -65,25 +79,24 @@ function buildEmailHtml(args: {
 
   return `
     <div style="font-family: Inter, Arial, sans-serif; color: #111827; line-height: 1.6;">
-      <p>Hola ${args.sellerName},</p>
+      <p>${m.email_contact_greeting({ sellerName: args.sellerName }, messageOptions(args.locale))}</p>
       <p>
-        Recibiste un nuevo mensaje sobre tu cromo
-        <strong>${buildStickerName(args.sticker)}</strong> en Stickerts.
+        ${m.email_contact_intro({ stickerName: buildStickerName(args.sticker) }, messageOptions(args.locale))}
       </p>
-      <p style="margin-bottom: 8px;"><strong>Mensaje del comprador:</strong></p>
+      <p style="margin-bottom: 8px;"><strong>${m.email_contact_message_label({}, messageOptions(args.locale))}</strong></p>
       <div
         style="border-radius: 16px; background: #f3f4f6; padding: 16px; white-space: pre-wrap;"
       >
         ${messageHtml}
       </div>
       <p style="margin-top: 20px; color: #6b7280; font-size: 13px;">
-        Te recomendamos coordinar la transacción en un lugar público.
+        ${m.email_contact_safety_notice({}, messageOptions(args.locale))}
       </p>
     </div>
   `;
 }
 
-async function requireCurrentUser(ctx: ActionCtx) {
+async function requireCurrentUser(ctx: ActionCtx, locale: AppLocale) {
   const currentUser: CurrentUserData | null = await ctx.runQuery(
     api.users.getCurrentUser,
     {},
@@ -92,7 +105,7 @@ async function requireCurrentUser(ctx: ActionCtx) {
   if (!currentUser) {
     throwContactError(
       "AUTHENTICATION_REQUIRED",
-      "Debes iniciar sesion para contactar vendedores.",
+      m.error_authentication_required({}, messageOptions(locale)),
     );
   }
 
@@ -102,6 +115,7 @@ async function requireCurrentUser(ctx: ActionCtx) {
 export const resolveSellerContactTarget = internalQuery({
   args: {
     listingId: v.id("listings"),
+    locale: localeValidator,
   },
   handler: async (ctx, args): Promise<ContactTarget> => {
     const listing = await ctx.db.get(args.listingId);
@@ -109,7 +123,7 @@ export const resolveSellerContactTarget = internalQuery({
     if (!listing || listing.status !== "active") {
       throwContactError(
         "CONTACT_LISTING_UNAVAILABLE",
-        "Este cromo ya no esta disponible.",
+        m.error_contact_listing_unavailable({}, messageOptions(args.locale)),
       );
     }
 
@@ -121,7 +135,7 @@ export const resolveSellerContactTarget = internalQuery({
     if (!seller || !sticker) {
       throwContactError(
         "CONTACT_TARGET_UNAVAILABLE",
-        "No pudimos preparar este contacto.",
+        m.error_contact_target_unavailable({}, messageOptions(args.locale)),
       );
     }
 
@@ -130,7 +144,10 @@ export const resolveSellerContactTarget = internalQuery({
     if (!sellerUser?.email) {
       throwContactError(
         "CONTACT_SELLER_EMAIL_UNAVAILABLE",
-        "Este vendedor no tiene un email disponible.",
+        m.error_contact_seller_email_unavailable(
+          {},
+          messageOptions(args.locale),
+        ),
       );
     }
 
@@ -141,6 +158,7 @@ export const resolveSellerContactTarget = internalQuery({
 export const consumeFreeSellerContactIfNeeded = internalMutation({
   args: {
     userId: v.id("users"),
+    locale: localeValidator,
   },
   handler: async (ctx, args) => {
     const user = await ctx.db.get(args.userId);
@@ -148,7 +166,7 @@ export const consumeFreeSellerContactIfNeeded = internalMutation({
     if (!user) {
       throwContactError(
         "CONTACT_USER_NOT_FOUND",
-        "No encontramos al usuario actual.",
+        m.error_contact_user_not_found({}, messageOptions(args.locale)),
       );
     }
 
@@ -164,7 +182,7 @@ export const consumeFreeSellerContactIfNeeded = internalMutation({
     if (user.freeSellerContactsRemaining <= 0) {
       throwContactError(
         "CONTACT_FREE_LIMIT_REACHED",
-        "Ya usaste tu contacto con vendedores gratis.",
+        m.error_contact_free_limit_reached({}, messageOptions(args.locale)),
       );
     }
 
@@ -181,6 +199,7 @@ export const assertContactRateLimit = internalQuery({
     senderUserId: v.id("users"),
     listingId: v.id("listings"),
     nowMs: v.number(),
+    locale: localeValidator,
   },
   handler: async (ctx, args) => {
     const recentContacts = await ctx.db
@@ -196,7 +215,7 @@ export const assertContactRateLimit = internalQuery({
     if (recentContacts.length > 0) {
       throwContactError(
         "CONTACT_RATE_LIMITED",
-        "Ya contactaste a este vendedor por esta publicacion en las ultimas 24 horas.",
+        m.error_contact_rate_limited({}, messageOptions(args.locale)),
       );
     }
   },
@@ -237,35 +256,37 @@ export const sendSellerContact = action({
   args: {
     listingId: v.id("listings"),
     message: v.string(),
+    locale: localeValidator,
   },
   handler: async (ctx, args) => {
+    const locale = args.locale ?? "es";
     const message = args.message.trim();
     const nowMs = Date.now();
 
     if (!message) {
       throwContactError(
         "CONTACT_MESSAGE_REQUIRED",
-        "Escribe un mensaje antes de enviarlo.",
+        m.error_contact_message_required({}, messageOptions(locale)),
       );
     }
 
     if (message.length > MAX_MESSAGE_LENGTH) {
       throwContactError(
         "CONTACT_MESSAGE_TOO_LONG",
-        "Tu mensaje es demasiado largo.",
+        m.error_contact_message_too_long({}, messageOptions(locale)),
       );
     }
 
-    const currentUser = await requireCurrentUser(ctx);
+    const currentUser = await requireCurrentUser(ctx, locale);
     const target: ContactTarget = await ctx.runQuery(
       internal.contacts.resolveSellerContactTarget,
-      { listingId: args.listingId },
+      { listingId: args.listingId, locale },
     );
 
     if (target.seller.userId === currentUser.user._id) {
       throwContactError(
         "CONTACT_SELF_NOT_ALLOWED",
-        "No puedes contactarte con tu propia publicacion.",
+        m.error_contact_self_not_allowed({}, messageOptions(locale)),
       );
     }
 
@@ -273,24 +294,27 @@ export const sendSellerContact = action({
       senderUserId: currentUser.user._id,
       listingId: args.listingId,
       nowMs,
+      locale,
     });
 
     const { consumedFreeContact } = await ctx.runMutation(
       internal.contacts.consumeFreeSellerContactIfNeeded,
-      { userId: currentUser.user._id },
+      { userId: currentUser.user._id, locale },
     );
 
     try {
       const result = await resend.emails.send({
         from: RESEND_NO_REPLY_FROM,
         to: target.sellerUser.email,
-        subject: buildEmailSubject(target.sticker),
+        subject: buildEmailSubject(target.sticker, locale),
         text: buildEmailText({
+          locale,
           sellerName: target.sellerUser.name,
           sticker: target.sticker,
           message,
         }),
         html: buildEmailHtml({
+          locale,
           sellerName: target.sellerUser.name,
           sticker: target.sticker,
           message,
@@ -300,7 +324,7 @@ export const sendSellerContact = action({
       if (result.error) {
         throwContactError(
           "CONTACT_SEND_FAILED",
-          "No pudimos enviar tu mensaje. Intenta de nuevo.",
+          m.error_contact_send_failed({}, messageOptions(locale)),
         );
       }
 

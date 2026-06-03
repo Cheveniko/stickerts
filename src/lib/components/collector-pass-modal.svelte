@@ -18,15 +18,25 @@
   import XIcon from "@lucide/svelte/icons/x";
   import { onDestroy } from "svelte";
   import { useConvexClient } from "convex-svelte";
+  import * as m from "$lib/paraglide/messages";
+  import { getLocale } from "$lib/paraglide/runtime";
 
-  type Props = { open: boolean; onsuccess?: () => void; usedFreeContact?: boolean };
-  let { open = $bindable(), onsuccess, usedFreeContact = false }: Props = $props();
+  type Props = {
+    open: boolean;
+    onsuccess?: () => void;
+    usedFreeContact?: boolean;
+  };
+  let {
+    open = $bindable(),
+    onsuccess,
+    usedFreeContact = false,
+  }: Props = $props();
   const convex = useConvexClient();
 
   const benefits = [
-    "Contáctate con los dueños de cromos",
-    "Publica cromos en venta e intercambio",
-    "Recibe mensajes directos de compradores",
+    m.collector_pass_benefit_contact_owners(),
+    m.collector_pass_benefit_publish(),
+    m.collector_pass_benefit_receive_messages(),
   ];
 
   const CLOSE_TRANSITION_MS = 300;
@@ -43,15 +53,15 @@
   let statusMessage = $derived.by(() => {
     switch (checkoutState.kind) {
       case "initializing_paypal":
-        return "Cargando PayPal";
+        return m.collector_pass_status_loading();
       case "creating_order":
-        return "Preparando tu orden";
+        return m.collector_pass_status_creating_order();
       case "capturing_order":
-        return "Confirmando tu pago";
+        return m.collector_pass_status_capturing();
       case "ready":
-        return "Paga de forma segura con PayPal.";
+        return m.collector_pass_status_ready();
       case "success":
-        return "¡Pago completado! Tu Pase de Coleccionista ya está activo.";
+        return m.collector_pass_status_success();
       case "error":
         return checkoutState.message;
       default:
@@ -100,7 +110,7 @@
     try {
       const result = await convex.action(
         api.collectorPassPurchases.createCollectorPassOrder,
-        {},
+        { locale: getLocale() },
       );
 
       checkoutState = { kind: "ready" };
@@ -109,10 +119,7 @@
       checkoutState = {
         kind: "error",
         source: "checkout",
-        message: getErrorMessage(
-          error,
-          "No pudimos crear tu orden de PayPal. Intenta de nuevo.",
-        ),
+        message: getErrorMessage(error, m.collector_pass_error_create_order()),
       };
       throw error;
     }
@@ -126,6 +133,7 @@
         api.collectorPassPurchases.captureCollectorPassOrder,
         {
           paypalOrderId: data.orderID,
+          locale: getLocale(),
         },
       );
 
@@ -147,7 +155,7 @@
         source: "checkout",
         message: getErrorMessage(
           error,
-          "No pudimos confirmar tu pago. Si PayPal mostró un cobro, contacta soporte.",
+          m.collector_pass_error_confirm_payment(),
         ),
       };
       throw error;
@@ -162,10 +170,7 @@
     checkoutState = {
       kind: "error",
       source: "checkout",
-      message: getErrorMessage(
-        error,
-        "Ocurrió un error con PayPal. Intenta de nuevo.",
-      ),
+      message: getErrorMessage(error, m.collector_pass_error_paypal()),
     };
   }
 
@@ -214,7 +219,7 @@
     >
       <!-- Close button -->
       <button
-        aria-label="Cerrar"
+        aria-label={m.common_close()}
         class="absolute top-3.5 right-3.5 z-10 flex size-10 shrink-0 items-center justify-center rounded-2xl text-muted-foreground transition-[background-color,transform] duration-150 hover:bg-muted active:scale-[0.96]"
         disabled={isBusy}
         aria-disabled={isBusy}
@@ -239,15 +244,13 @@
               id="collector-pass-modal-title"
               class="text-lg font-semibold text-balance"
             >
-              Pase de Coleccionista
+              {m.collector_pass_title()}
             </h2>
             <p class="text-sm text-pretty text-muted-foreground">
               {#if usedFreeContact}
-                Ya usaste tu contacto gratuito con vendedores. Activa tu Pase
-                para contactar sin límites.
+                {m.collector_pass_description_used_free_contact()}
               {:else}
-                Todo lo que necesitas para vender e intercambiar cromos en
-                Stickerts.
+                {m.collector_pass_description_default()}
               {/if}
             </p>
           </div>
@@ -273,17 +276,21 @@
         <div class="rounded-xl bg-muted/60 px-4 py-3.5">
           <div class="flex items-center justify-between gap-4">
             <div class="flex flex-col gap-0.5">
-              <span class="text-xs text-muted-foreground">Pago único</span>
+              <span class="text-xs text-muted-foreground"
+                >{m.collector_pass_price_type()}</span
+              >
               <div class="flex items-baseline gap-1.5">
                 <span class="text-2xl font-bold tabular-nums">$1.99</span>
-                <span class="text-sm text-muted-foreground">USD</span>
+                <span class="text-sm text-muted-foreground"
+                  >{m.collector_pass_currency()}</span
+                >
               </div>
             </div>
             <div
               class="flex items-center gap-1.5 rounded-full bg-background px-3 py-1.5 text-xs font-medium ring-1 ring-black/5 dark:ring-white/10"
             >
               <SparklesIcon class="size-3" />
-              Acceso todo el 2026
+              {m.collector_pass_access_period()}
             </div>
           </div>
         </div>
@@ -321,7 +328,7 @@
                 class="w-full duration-150 active:scale-[0.96]"
                 onclick={retry}
               >
-                Reintentar
+                {m.common_retry()}
               </Button>
             </div>
           {:else if checkoutState.kind === "creating_order"}

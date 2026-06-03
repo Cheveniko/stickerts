@@ -11,28 +11,25 @@ const convexErrorMessages = {
 } as const;
 
 const directConvexErrorMessages = {
-  SELLER_INACTIVE: "Tu cuenta seller no puede publicar cromos en este momento.",
-  STICKER_NOT_FOUND: "No encontramos el cromo seleccionado.",
-  LISTING_NOT_FOUND: "No encontramos la publicacion seleccionada.",
-  LISTING_REMOVED: "Esta publicacion ya no se puede editar.",
-  INVALID_CURRENCY: "La moneda debe ser un codigo ISO de 3 letras.",
-  INVALID_PRICE: "El precio debe ser mayor a 0.",
-  INVALID_QUANTITY: "La cantidad debe ser mayor a 0.",
-  INVALID_IMAGE_KEY: "La imagen seleccionada no pertenece a este seller.",
-  WANTED_STICKER_NOT_FOUND:
-    "Uno de los cromos solicitados para intercambio no existe.",
-  CONTACT_LISTING_UNAVAILABLE: "Este cromo ya no esta disponible.",
-  CONTACT_TARGET_UNAVAILABLE: "No pudimos preparar este contacto.",
-  CONTACT_SELLER_EMAIL_UNAVAILABLE:
-    "Este vendedor no tiene un medio de contacto disponible.",
-  CONTACT_USER_NOT_FOUND: "No encontramos al usuario actual.",
-  CONTACT_FREE_LIMIT_REACHED: "Ya usaste tu contacto con vendedores gratis.",
-  CONTACT_RATE_LIMITED:
-    "Ya contactaste a este vendedor por esta publicacion en las ultimas 24 horas.",
-  CONTACT_MESSAGE_REQUIRED: "Escribe un mensaje antes de enviarlo.",
-  CONTACT_MESSAGE_TOO_LONG: "Tu mensaje es demasiado largo.",
-  CONTACT_SELF_NOT_ALLOWED: "No puedes contactarte con tu propia publicacion.",
-  CONTACT_SEND_FAILED: "No pudimos enviar tu mensaje. Intenta de nuevo.",
+  SELLER_INACTIVE: m.error_seller_inactive,
+  STICKER_NOT_FOUND: m.error_sticker_not_found,
+  LISTING_NOT_FOUND: m.error_listing_not_found,
+  LISTING_REMOVED: m.error_listing_removed,
+  INVALID_CURRENCY: m.error_invalid_currency,
+  INVALID_PRICE: m.error_invalid_price,
+  INVALID_QUANTITY: m.error_invalid_quantity,
+  INVALID_IMAGE_KEY: m.error_invalid_image_key,
+  WANTED_STICKER_NOT_FOUND: m.error_wanted_sticker_not_found,
+  CONTACT_LISTING_UNAVAILABLE: m.error_contact_listing_unavailable,
+  CONTACT_TARGET_UNAVAILABLE: m.error_contact_target_unavailable,
+  CONTACT_SELLER_EMAIL_UNAVAILABLE: m.error_contact_seller_email_unavailable,
+  CONTACT_USER_NOT_FOUND: m.error_contact_user_not_found,
+  CONTACT_FREE_LIMIT_REACHED: m.error_contact_free_limit_reached,
+  CONTACT_RATE_LIMITED: m.error_contact_rate_limited,
+  CONTACT_MESSAGE_REQUIRED: m.error_contact_message_required,
+  CONTACT_MESSAGE_TOO_LONG: m.error_contact_message_too_long,
+  CONTACT_SELF_NOT_ALLOWED: m.error_contact_self_not_allowed,
+  CONTACT_SEND_FAILED: m.error_contact_send_failed,
 } as const;
 
 export function getConvexErrorMessage(error: unknown) {
@@ -54,7 +51,7 @@ export function getConvexErrorMessage(error: unknown) {
   if (code && code in directConvexErrorMessages) {
     return directConvexErrorMessages[
       code as keyof typeof directConvexErrorMessages
-    ];
+    ]();
   }
 
   return m.error_generic_convex();

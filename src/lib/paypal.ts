@@ -1,5 +1,6 @@
 import { browser } from "$app/environment";
 import type { Attachment } from "svelte/attachments";
+import * as m from "$lib/paraglide/messages";
 
 const PAYPAL_SDK_SCRIPT_ID = "paypal-sdk";
 const PAYPAL_SDK_CURRENCY = "USD";
@@ -75,17 +76,13 @@ export function resetPayPalSdkPromise() {
 
 export function loadPayPalSdk(clientId: string): Promise<PayPalNamespace> {
   if (!browser) {
-    return Promise.reject(
-      new Error("PayPal solo se puede cargar desde el navegador."),
-    );
+    return Promise.reject(new Error(m.paypal_browser_only()));
   }
 
   const trimmedClientId = clientId.trim();
 
   if (!trimmedClientId) {
-    return Promise.reject(
-      new Error("Falta configurar PUBLIC_PAYPAL_CLIENT_ID."),
-    );
+    return Promise.reject(new Error(m.paypal_missing_client_id()));
   }
 
   if (window.paypal) {
@@ -126,7 +123,7 @@ export function loadPayPalSdk(clientId: string): Promise<PayPalNamespace> {
       }
 
       resetPayPalSdkPromise();
-      reject(new Error("PayPal no se cargo correctamente."));
+      reject(new Error(m.paypal_sdk_invalid_load()));
     };
 
     const handleError = () => {
@@ -138,7 +135,7 @@ export function loadPayPalSdk(clientId: string): Promise<PayPalNamespace> {
         script.remove();
       }
       resetPayPalSdkPromise();
-      reject(new Error("No pudimos cargar PayPal. Intenta de nuevo."));
+      reject(new Error(m.paypal_sdk_load_failed()));
     };
 
     if (existingScript) {

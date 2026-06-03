@@ -1,12 +1,12 @@
 import type { PageLoad } from "./$types";
 import { createSeoMetadata } from "$lib/seo";
+import * as m from "$lib/paraglide/messages";
 
 export const load: PageLoad = () => {
   return {
     seo: createSeoMetadata({
-      title: "Términos y Condiciones | Stickerts",
-      description:
-        "Consulta los términos y condiciones que regulan el acceso y uso de la plataforma Stickerts.",
+      title: m.seo_terms_title(),
+      description: m.seo_terms_description(),
       path: "/terms",
     }),
   };

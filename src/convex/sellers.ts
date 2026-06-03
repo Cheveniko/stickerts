@@ -6,8 +6,10 @@ import {
   type QueryCtx,
 } from "./_generated/server";
 import { ConvexError, v } from "convex/values";
+import * as m from "../lib/paraglide/messages.js";
 import { getCurrentAuthUserId, requireAuthUserId } from "./authHelpers";
 import { getCityBySlug, type City } from "./cities";
+import { messageOptions, type AppLocale } from "./i18n";
 import type { User } from "./users";
 
 export type Seller = Doc<"sellers">;
@@ -46,27 +48,27 @@ export async function getCurrentSellerByUserId(
 export async function requireCurrentSeller(
   ctx: SellerDbCtx,
   userId: Seller["userId"],
+  locale?: AppLocale,
 ) {
   const seller = await getSellerByUserId(ctx, userId);
 
   if (!seller) {
     throw new ConvexError({
       code: "SELLER_NOT_FOUND",
-      message: "No encontramos un seller para este usuario.",
+      message: m.error_seller_not_found({}, messageOptions(locale)),
     });
   }
 
   return seller;
 }
 
-function normalizeUsername(username: string) {
+function normalizeUsername(username: string, locale?: AppLocale) {
   const normalizedUsername = username.trim().toLowerCase();
 
   if (!USERNAME_REGEX.test(normalizedUsername)) {
     throw new ConvexError({
       code: "INVALID_USERNAME",
-      message:
-        "El username debe tener entre 3 y 30 caracteres y solo puede usar letras, numeros y guion bajo.",
+      message: m.error_invalid_username({}, messageOptions(locale)),
     });
   }
 
@@ -91,7 +93,7 @@ function clampUsernameBase(value: string, maxLength: number) {
   return value.slice(0, maxLength).replace(/_+$/g, "");
 }
 
-function buildUsernameCandidate(base: string, suffix: number) {
+function buildUsernameCandidate(base: string, suffix: number, locale?: AppLocale) {
   const suffixText = suffix === 0 ? "" : `_${suffix}`;
   const trimmedBase = clampUsernameBase(
     base,
@@ -102,7 +104,7 @@ function buildUsernameCandidate(base: string, suffix: number) {
     return null;
   }
 
-  return normalizeUsername(`${trimmedBase}${suffixText}`);
+  return normalizeUsername(`${trimmedBase}${suffixText}`, locale);
 }
 
 function getInitialUsernameBases(user: User) {
@@ -116,12 +118,13 @@ function getInitialUsernameBases(user: User) {
 export async function generateUniqueSellerUsername(
   ctx: SellerDbCtx,
   user: User,
+  locale?: AppLocale,
 ) {
   const bases = getInitialUsernameBases(user);
 
   for (const base of bases) {
     for (let suffix = 0; suffix < 1000; suffix += 1) {
-      const candidate = buildUsernameCandidate(base, suffix);
+      const candidate = buildUsernameCandidate(base, suffix, locale);
 
       if (!candidate) {
         continue;
@@ -140,17 +143,17 @@ export async function generateUniqueSellerUsername(
 
   throw new ConvexError({
     code: "USERNAME_GENERATION_FAILED",
-    message: "No pudimos generar un username disponible para este seller.",
+    message: m.error_username_generation_failed({}, messageOptions(locale)),
   });
 }
 
-function normalizeCurrency(currency: string) {
+function normalizeCurrency(currency: string, locale?: AppLocale) {
   const normalizedCurrency = currency.trim().toUpperCase();
 
   if (!DEFAULT_CURRENCY_REGEX.test(normalizedCurrency)) {
     throw new ConvexError({
       code: "INVALID_DEFAULT_CURRENCY",
-      message: "La moneda debe ser un codigo ISO de 3 letras.",
+      message: m.error_invalid_default_currency({}, messageOptions(locale)),
     });
   }
 
@@ -161,6 +164,7 @@ export async function activateSellerForCollectorPass(
   ctx: SellerWriteCtx,
   userId: Seller["userId"],
   activatedAt: number,
+  locale?: AppLocale,
 ) {
   const existingSeller = await getSellerByUserId(ctx, userId);
 
@@ -171,10 +175,12 @@ export async function activateSellerForCollectorPass(
   const user = await ctx.db.get(userId);
 
   if (!user) {
-    throw new Error("No encontramos el usuario para activar el perfil seller.");
+    throw new Error(
+      m.error_seller_activation_user_not_found({}, messageOptions(locale)),
+    );
   }
 
-  const username = await generateUniqueSellerUsername(ctx, user);
+  const username = await generateUniqueSellerUsername(ctx, user, locale);
 
   return await ctx.db.insert("sellers", {
     userId,
@@ -216,7 +222,7 @@ export const updateCurrentSellerUsername = mutation({
     if (existingSeller && existingSeller._id !== seller._id) {
       throw new ConvexError({
         code: "USERNAME_TAKEN",
-        message: "Este username ya esta en uso.",
+        message: m.error_username_taken({}, messageOptions()),
       });
     }
 
@@ -246,12 +252,12 @@ export const updateCurrentSellerDefaultCity = mutation({
     const seller = await requireCurrentSeller(ctx, userId);
     const city = await getCityBySlug(ctx, args.citySlug);
 
-    if (!city) {
-      throw new ConvexError({
-        code: "CITY_NOT_FOUND",
-        message: "No encontramos la ciudad seleccionada.",
-      });
-    }
+      if (!city) {
+        throw new ConvexError({
+          code: "CITY_NOT_FOUND",
+          message: m.error_city_not_found({}, messageOptions()),
+        });
+      }
 
     await ctx.db.patch(seller._id, {
       defaultCitySlug: city.slug,

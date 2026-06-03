@@ -14,6 +14,7 @@ import type * as cities from "../cities.js";
 import type * as collectorPassPurchases from "../collectorPassPurchases.js";
 import type * as contacts from "../contacts.js";
 import type * as http from "../http.js";
+import type * as i18n from "../i18n.js";
 import type * as listings from "../listings.js";
 import type * as locationSeed from "../locationSeed.js";
 import type * as resend from "../resend.js";
@@ -34,6 +35,7 @@ declare const fullApi: ApiFromModules<{
   collectorPassPurchases: typeof collectorPassPurchases;
   contacts: typeof contacts;
   http: typeof http;
+  i18n: typeof i18n;
   listings: typeof listings;
   locationSeed: typeof locationSeed;
   resend: typeof resend;

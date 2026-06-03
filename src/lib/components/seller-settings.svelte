@@ -11,6 +11,7 @@
     CURRENCIES,
   } from "$lib/location-data";
   import { useConvexClient } from "convex-svelte";
+  import * as m from "$lib/paraglide/messages";
 
   type Props = { seller: CurrentSeller };
 
@@ -151,11 +152,13 @@
 
 <div class="flex flex-col gap-4">
   <div>
-    <p class="text-sm font-medium text-muted-foreground">Perfil de vendedor</p>
+    <p class="text-sm font-medium text-muted-foreground">
+      {m.seller_profile_title()}
+    </p>
     {#if isEditingUsername}
       <input
         bind:value={usernameValue}
-        placeholder="tu_usuario"
+        placeholder={m.seller_username_placeholder()}
         disabled={isSavingUsername}
         onblur={saveUsername}
         onkeydown={(e) => {
@@ -185,7 +188,7 @@
 
   <div class="grid grid-cols-2 gap-3">
     <div class="grid gap-1.5">
-      <Label>País</Label>
+      <Label>{m.common_country()}</Label>
       <Select.Root
         type="single"
         value={selectedCountryCode}
@@ -196,7 +199,7 @@
           {#if selectedCountry}
             {selectedCountry.flagEmoji} {selectedCountry.name}
           {:else}
-            <span class="text-muted-foreground">País</span>
+            <span class="text-muted-foreground">{m.common_country()}</span>
           {/if}
         </Select.Trigger>
         <Select.Content class="max-h-60">
@@ -211,7 +214,7 @@
     </div>
 
     <div class="grid gap-1.5">
-      <Label>Ciudad</Label>
+      <Label>{m.common_city()}</Label>
       <Select.Root
         type="single"
         value={selectedCitySlug}
@@ -220,11 +223,12 @@
       >
         <Select.Trigger class="h-8 w-full border-input bg-card text-sm">
           {#if !selectedCountryCode}
-            <span class="text-muted-foreground">País primero</span>
+            <span class="text-muted-foreground">{m.common_country_first()}</span
+            >
           {:else if selectedCity}
             {selectedCity.name}
           {:else}
-            <span class="text-muted-foreground">Ciudad</span>
+            <span class="text-muted-foreground">{m.common_city()}</span>
           {/if}
         </Select.Trigger>
         <Select.Content class="max-h-60">
@@ -241,7 +245,7 @@
   </div>
 
   <div class="grid gap-1.5">
-    <Label>Moneda predeterminada</Label>
+    <Label>{m.seller_default_currency()}</Label>
     <Select.Root
       type="single"
       value={selectedCurrency}
@@ -253,7 +257,8 @@
           {selectedCurrencyData.symbol}
           {selectedCurrencyData.code} - {selectedCurrencyData.name}
         {:else}
-          <span class="text-muted-foreground">Selecciona una moneda</span>
+          <span class="text-muted-foreground">{m.common_select_currency()}</span
+          >
         {/if}
       </Select.Trigger>
       <Select.Content class="max-h-60">

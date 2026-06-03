@@ -8,6 +8,7 @@
   import PencilIcon from "@lucide/svelte/icons/pencil";
   import Trash2Icon from "@lucide/svelte/icons/trash-2";
   import ArrowLeftRightIcon from "@lucide/svelte/icons/arrow-left-right";
+  import * as m from "$lib/paraglide/messages";
 
   type Props = {
     listing: SellerListingForSettings;
@@ -60,20 +61,20 @@
         <span class="size-1.5 shrink-0 rounded-full {statusDotClass}"></span>
         {#if listing.sticker.code}
           <span
-            class="font-mono text-[10px] uppercase tracking-wider text-muted-foreground"
+            class="font-mono text-[10px] tracking-wider text-muted-foreground uppercase"
           >
             {listing.sticker.code}
           </span>
         {/if}
       </div>
-      <p class="truncate text-sm font-medium leading-snug">
+      <p class="truncate text-sm leading-snug font-medium">
         {listing.sticker.label}
       </p>
     </div>
 
     <!-- Price / intent -->
     <div
-      class="flex shrink-0 items-center justify-end text-xs tabular-nums text-muted-foreground"
+      class="flex shrink-0 items-center justify-end text-xs text-muted-foreground tabular-nums"
     >
       {#if listing.intent === "trade"}
         <ArrowLeftRightIcon class="size-3.5" />
@@ -94,7 +95,7 @@
           {#snippet child({ props })}
             <button
               {...props}
-              aria-label="Editar publicación"
+              aria-label={m.seller_listing_edit_aria()}
               onclick={() => (editOpen = true)}
               class="flex size-8 items-center justify-center rounded-xl text-muted-foreground transition-[background-color,transform] duration-150 hover:bg-muted hover:text-foreground active:scale-[0.96]"
             >
@@ -102,7 +103,9 @@
             </button>
           {/snippet}
         </Tooltip.Trigger>
-        <Tooltip.Content sideOffset={6}>Editar</Tooltip.Content>
+        <Tooltip.Content sideOffset={6}
+          >{m.seller_listing_edit()}</Tooltip.Content
+        >
       </Tooltip.Root>
 
       <Tooltip.Root>
@@ -110,7 +113,7 @@
           {#snippet child({ props })}
             <button
               {...props}
-              aria-label="Eliminar publicación"
+              aria-label={m.seller_listing_delete_aria()}
               onclick={() => (deleteOpen = true)}
               class="flex size-8 items-center justify-center rounded-xl text-muted-foreground transition-[background-color,transform] duration-150 hover:bg-destructive/10 hover:text-destructive active:scale-[0.96]"
             >
@@ -118,7 +121,9 @@
             </button>
           {/snippet}
         </Tooltip.Trigger>
-        <Tooltip.Content sideOffset={6}>Eliminar</Tooltip.Content>
+        <Tooltip.Content sideOffset={6}
+          >{m.seller_listing_delete()}</Tooltip.Content
+        >
       </Tooltip.Root>
     </div>
   </div>

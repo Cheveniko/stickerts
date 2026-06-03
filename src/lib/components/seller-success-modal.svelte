@@ -5,6 +5,7 @@
   import { Button } from "$lib/components/ui/button/index.js";
   import SparklesIcon from "@lucide/svelte/icons/sparkles";
   import XIcon from "@lucide/svelte/icons/x";
+  import * as m from "$lib/paraglide/messages";
 
   type Props = { open: boolean };
   let { open = $bindable() }: Props = $props();
@@ -44,7 +45,7 @@
     >
       <!-- Close button -->
       <button
-        aria-label="Cerrar"
+        aria-label={m.common_close()}
         class="absolute top-3.5 right-3.5 z-10 flex size-10 shrink-0 items-center justify-center rounded-2xl text-muted-foreground transition-[background-color,transform] duration-150 hover:bg-muted active:scale-[0.96]"
         onclick={close}
       >
@@ -67,10 +68,10 @@
               id="seller-success-modal-title"
               class="text-lg font-semibold text-balance"
             >
-              ¡Tu Pase de Coleccionista está activo!
+              {m.seller_success_title()}
             </h2>
             <p class="text-sm text-pretty text-muted-foreground">
-              Ya puedes publicar, vender e intercambiar cromos en Stickerts.
+              {m.seller_success_description()}
             </p>
           </div>
         </div>
@@ -81,11 +82,11 @@
           in:fly={{ y: 12, duration: 250, delay: 160, easing: cubicOut }}
         >
           <p class="text-center text-sm text-pretty text-muted-foreground">
-            Configura tu nombre, ciudad y moneda en
+            {m.seller_success_tip_prefix()}
             <strong class="font-medium text-foreground">
-              Ajustes → Perfil
+              {m.seller_success_tip_highlight()}
             </strong>
-            antes de publicar tu primer cromo.
+            {m.seller_success_tip_suffix()}
           </p>
         </div>
 
@@ -97,7 +98,7 @@
             class="w-full transition-[background-color,transform] duration-150 active:scale-[0.96]"
             onclick={close}
           >
-            Entendido
+            {m.seller_success_acknowledge()}
           </Button>
         </div>
       </div>

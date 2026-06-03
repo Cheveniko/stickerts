@@ -7,6 +7,7 @@
   import { Input } from "$lib/components/ui/input/index.js";
   import { Label } from "$lib/components/ui/label/index.js";
   import { Button } from "$lib/components/ui/button/index.js";
+  import * as m from "$lib/paraglide/messages";
   import MailIcon from "@lucide/svelte/icons/mail";
   import XIcon from "@lucide/svelte/icons/x";
 
@@ -66,9 +67,7 @@
       view = "success";
     } catch (error) {
       errorMessage =
-        error instanceof Error
-          ? error.message
-          : "No pudimos enviarte el enlace. Intenta de nuevo.";
+        error instanceof Error ? error.message : m.login_error_send_link();
     } finally {
       submitting = false;
     }
@@ -106,14 +105,14 @@
           <div class="flex items-start justify-between gap-4">
             <div class="flex min-w-0 flex-col gap-0.5">
               <h2 id="login-modal-title" class="font-semibold">
-                Regístrate para empezar
+                {m.login_title()}
               </h2>
               <p class="text-sm text-muted-foreground">
-                Ingresa tu correo y recibirás un enlace para entrar.
+                {m.login_description()}
               </p>
             </div>
             <button
-              aria-label="Cerrar"
+              aria-label={m.common_close()}
               class="flex size-8 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-[background-color,transform] duration-150 hover:bg-muted active:scale-[0.96]"
               disabled={submitting}
               onclick={close}
@@ -125,13 +124,13 @@
           <form class="flex flex-col gap-5" onsubmit={handleSubmit}>
             <!-- Form fields -->
             <div class="flex flex-col gap-1.5">
-              <Label for="login-email">Correo electrónico</Label>
+              <Label for="login-email">{m.login_email_label()}</Label>
               <Input
                 id="login-email"
                 type="email"
                 bind:value={email}
                 disabled={submitting}
-                placeholder="tu@correo.com"
+                placeholder={m.login_email_placeholder()}
                 class="border border-border bg-card"
                 oninput={handleEmailInput}
               />
@@ -152,14 +151,14 @@
                 class="border border-border duration-150 active:scale-[0.96]"
                 onclick={close}
               >
-                Cancelar
+                {m.common_cancel()}
               </Button>
               <Button
                 type="submit"
                 disabled={!email.trim() || submitting}
                 class="w-[95px] duration-150 hover:bg-primary hover:brightness-105 active:scale-[0.96]"
               >
-                {submitting ? "Enviando" : "Continuar"}
+                {submitting ? m.login_sending() : m.common_continue()}
               </Button>
             </div>
           </form>
@@ -173,22 +172,22 @@
             </div>
             <div class="flex flex-col gap-1.5">
               <h2 id="login-modal-title" class="font-semibold">
-                Revisa tu correo
+                {m.login_success_title()}
               </h2>
               <p class="text-sm text-balance text-muted-foreground">
-                Te enviamos un enlace a
+                {m.login_success_intro()}
                 <span class="font-semibold text-foreground">
                   {email}
                 </span>.
                 <br />
-                Haz click en él para completar tu registro.
+                {m.login_success_outro()}
               </p>
             </div>
             <Button
               class="mt-1 w-full duration-150 hover:bg-primary hover:brightness-105 active:scale-[0.96]"
               onclick={close}
             >
-              Cerrar
+              {m.common_close()}
             </Button>
           </div>
         {/if}

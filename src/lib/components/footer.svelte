@@ -1,7 +1,9 @@
 <script lang="ts">
   import { Monitor, Moon, Sun } from "@lucide/svelte";
   import { setMode, userPrefersMode } from "mode-watcher";
+  import LanguageSwitcher from "$lib/components/language-switcher.svelte";
   import * as m from "$lib/paraglide/messages";
+  import { localizeHref } from "$lib/paraglide/runtime";
 
   function cycleMode() {
     const current = userPrefersMode.current;
@@ -24,18 +26,23 @@
     class="container flex flex-wrap items-center gap-x-2 gap-y-2.5 py-3.5 sm:h-14 sm:flex-nowrap sm:justify-between sm:py-0"
   >
     <!-- Brand: always first, left -->
-    <a href="/" class="order-1 shrink-0 text-sm font-bold">Stickerts</a>
+    <a href={localizeHref("/")} class="order-1 shrink-0 text-sm font-bold"
+      >Stickerts</a
+    >
 
     <!-- Legal links: wraps to second row on mobile (order-3 + w-full), center on desktop -->
     <div
       class="order-3 flex w-full items-center gap-1.5 text-xs text-muted-foreground sm:order-2 sm:w-auto"
     >
-      <a href="/terms" class="-m-1 p-1 transition-colors hover:text-foreground">
+      <a
+        href={localizeHref("/terms")}
+        class="-m-1 p-1 transition-colors hover:text-foreground"
+      >
         {m.footer_terms()}
       </a>
       <span aria-hidden="true">·</span>
       <a
-        href="/privacy"
+        href={localizeHref("/privacy")}
         class="-m-1 p-1 transition-colors hover:text-foreground"
       >
         {m.footer_privacy()}
@@ -46,12 +53,14 @@
         target="_blank"
         class="-m-1 p-1 transition-colors hover:text-foreground"
       >
-        Feedback
+        {m.footer_feedback()}
       </a>
     </div>
 
     <!-- Theme toggle + attribution: pushed right on mobile (ml-auto), right on desktop -->
-    <div class="order-2 ml-auto flex items-center gap-3 sm:order-3 sm:ml-0">
+    <div
+      class="order-2 ml-auto flex items-center gap-2 sm:order-3 sm:ml-0 sm:gap-3"
+    >
       <button
         onclick={cycleMode}
         aria-label={modeLabel}
@@ -66,6 +75,8 @@
           <Monitor class="size-4" />
         {/if}
       </button>
+
+      <LanguageSwitcher />
 
       <a
         href="https://x.com/Cheveniko"

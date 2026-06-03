@@ -36,8 +36,8 @@
     listing.intent === "sale"
       ? m.listing_buy()
       : listing.intent === "trade"
-        ? "Intercambiar"
-        : "Contactar",
+        ? m.listing_trade_cta()
+        : m.listing_contact_cta(),
   );
 
   let listingCity = $derived(
@@ -159,7 +159,7 @@
       {:else if listing.intent === "trade"}
         <span class="flex items-center gap-1 text-sm font-medium">
           <ArrowLeftRightIcon class="size-3.5" />
-          Intercambio
+          {m.listing_trade_badge()}
         </span>
       {:else}
         <span
