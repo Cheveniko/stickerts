@@ -1,7 +1,7 @@
 import AuthResend from "@auth/core/providers/resend";
 import { convexAuth } from "@convex-dev/auth/server";
-import * as m from "../lib/paraglide/messages.js";
-import { getLocaleFromUrl, messageOptions } from "./i18n";
+import { t } from "./messages";
+import { getLocaleFromUrl } from "./i18n";
 import { resend, RESEND_LOGIN_FROM } from "./resend";
 
 function getDefaultNameFromEmail(email: string) {
@@ -18,9 +18,9 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
         const result = await resend.emails.send({
           from: provider.from ?? RESEND_LOGIN_FROM,
           to: email,
-          subject: m.email_login_subject({}, messageOptions(locale)),
-          html: `<div style="font-family: Inter, Arial, sans-serif; color: #111827; line-height: 1.6;"><p>${m.email_login_html_intro({}, messageOptions(locale))}</p><p><a href="${url}">${url}</a></p></div>`,
-          text: m.email_login_text({ url }, messageOptions(locale)),
+          subject: t(locale, "email_login_subject"),
+          html: `<div style="font-family: Inter, Arial, sans-serif; color: #111827; line-height: 1.6;"><p>${t(locale, "email_login_html_intro")}</p><p><a href="${url}">${url}</a></p></div>`,
+          text: t(locale, "email_login_text", { url }),
         });
 
         if (result.error) {

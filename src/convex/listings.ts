@@ -1,5 +1,5 @@
 import { ConvexError, v } from "convex/values";
-import * as m from "../lib/paraglide/messages.js";
+import { t } from "./messages";
 import {
   mutation,
   query,
@@ -9,7 +9,6 @@ import {
 import type { Doc } from "./_generated/dataModel";
 import { requireAuthUserId } from "./authHelpers";
 import { getCityBySlug, type City } from "./cities";
-import { messageOptions } from "./i18n";
 import { requireCurrentSeller, type Seller } from "./sellers";
 import type { Sticker } from "./stickers";
 
@@ -66,7 +65,7 @@ function normalizeCurrency(currency: string) {
   if (!CURRENCY_REGEX.test(normalizedCurrency)) {
     throw new ConvexError({
       code: "INVALID_CURRENCY",
-      message: m.error_invalid_currency({}, messageOptions()),
+      message: t(undefined, "error_invalid_currency"),
     });
   }
 
@@ -77,7 +76,7 @@ function normalizePriceCents(priceCents: number) {
   if (!Number.isInteger(priceCents) || priceCents <= 0) {
     throw new ConvexError({
       code: "INVALID_PRICE",
-      message: m.error_invalid_price({}, messageOptions()),
+      message: t(undefined, "error_invalid_price"),
     });
   }
 
@@ -88,7 +87,7 @@ function normalizeQuantityAvailable(quantityAvailable: number) {
   if (!Number.isInteger(quantityAvailable) || quantityAvailable <= 0) {
     throw new ConvexError({
       code: "INVALID_QUANTITY",
-      message: m.error_invalid_quantity({}, messageOptions()),
+      message: t(undefined, "error_invalid_quantity"),
     });
   }
 
@@ -113,7 +112,7 @@ async function requireOwnedListing(
   if (!listing || listing.sellerId !== sellerId) {
     throw new ConvexError({
       code: "LISTING_NOT_FOUND",
-      message: m.error_listing_not_found({}, messageOptions()),
+      message: t(undefined, "error_listing_not_found"),
     });
   }
 
@@ -130,7 +129,7 @@ async function prepareListingWriteData(
   if (!city) {
     throw new ConvexError({
       code: "CITY_NOT_FOUND",
-      message: m.error_city_not_found({}, messageOptions()),
+      message: t(undefined, "error_city_not_found"),
     });
   }
 
@@ -151,14 +150,14 @@ async function prepareListingWriteData(
     if (args.priceCents === undefined) {
       throw new ConvexError({
         code: "INVALID_PRICE",
-        message: m.error_invalid_price({}, messageOptions()),
+        message: t(undefined, "error_invalid_price"),
       });
     }
 
     if (!args.currency) {
       throw new ConvexError({
         code: "INVALID_CURRENCY",
-        message: m.error_invalid_currency({}, messageOptions()),
+        message: t(undefined, "error_invalid_currency"),
       });
     }
 
@@ -169,7 +168,7 @@ async function prepareListingWriteData(
   if (!args.imageKey.startsWith(imageKeyPrefix)) {
     throw new ConvexError({
       code: "INVALID_IMAGE_KEY",
-      message: m.error_invalid_image_key({}, messageOptions()),
+      message: t(undefined, "error_invalid_image_key"),
     });
   }
 
@@ -181,7 +180,7 @@ async function prepareListingWriteData(
     if (wantedStickers.some((wantedSticker) => !wantedSticker?.isActive)) {
       throw new ConvexError({
         code: "WANTED_STICKER_NOT_FOUND",
-        message: m.error_wanted_sticker_not_found({}, messageOptions()),
+        message: t(undefined, "error_wanted_sticker_not_found"),
       });
     }
   }
@@ -350,7 +349,7 @@ export const createListing = mutation({
     if (seller.status !== "active") {
       throw new ConvexError({
         code: "SELLER_INACTIVE",
-        message: m.error_seller_inactive({}, messageOptions()),
+        message: t(undefined, "error_seller_inactive"),
       });
     }
 
@@ -359,7 +358,7 @@ export const createListing = mutation({
     if (!sticker || !sticker.isActive) {
       throw new ConvexError({
         code: "STICKER_NOT_FOUND",
-        message: m.error_sticker_not_found({}, messageOptions()),
+        message: t(undefined, "error_sticker_not_found"),
       });
     }
 
@@ -411,7 +410,7 @@ export const updateCurrentSellerListing = mutation({
     if (listing.status === "removed") {
       throw new ConvexError({
         code: "LISTING_REMOVED",
-        message: m.error_listing_removed({}, messageOptions()),
+        message: t(undefined, "error_listing_removed"),
       });
     }
 

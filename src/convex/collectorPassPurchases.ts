@@ -8,8 +8,8 @@ import {
   type QueryCtx,
 } from "./_generated/server";
 import { v } from "convex/values";
-import * as m from "../lib/paraglide/messages.js";
-import { messageOptions, type AppLocale } from "./i18n";
+import { t } from "./messages";
+import { type AppLocale } from "./i18n";
 import { activateSellerForCollectorPass } from "./sellers";
 import type { CurrentUserData } from "./users";
 
@@ -44,7 +44,7 @@ function parseAmountCents(value: string, locale: AppLocale) {
   const normalizedValue = value.trim();
 
   if (!/^\d+(?:\.\d{1,2})?$/.test(normalizedValue)) {
-    throw new Error(m.error_paypal_invalid_amount({}, messageOptions(locale)));
+    throw new Error(t(locale, "error_paypal_invalid_amount"));
   }
 
   return Math.round(Number(normalizedValue) * 100);
@@ -67,9 +67,7 @@ function getPaypalCredentials(locale: AppLocale) {
   const clientSecret = process.env.PAYPAL_CLIENT_SECRET?.trim();
 
   if (!clientId || !clientSecret) {
-    throw new Error(
-      m.error_paypal_not_configured({}, messageOptions(locale)),
-    );
+    throw new Error(t(locale, "error_paypal_not_configured"));
   }
 
   return { clientId, clientSecret };
@@ -125,8 +123,7 @@ async function paypalRequest(path: string, init: RequestInit, locale: AppLocale)
     throw new PaypalApiError(
       response.status,
       data,
-      extractPaypalErrorMessage(data) ??
-        m.error_paypal_request_rejected({}, messageOptions(locale)),
+      extractPaypalErrorMessage(data) ?? t(locale, "error_paypal_request_rejected"),
     );
   }
 
@@ -163,7 +160,7 @@ async function getPaypalAccessToken(locale: AppLocale) {
     typeof data.access_token !== "string" ||
     !data.access_token
   ) {
-    throw new Error(m.error_paypal_invalid_token({}, messageOptions(locale)));
+    throw new Error(t(locale, "error_paypal_invalid_token"));
   }
 
   return data.access_token;
@@ -189,7 +186,7 @@ async function createPaypalOrder(
       purchase_units: [
         {
           reference_id: "collector_pass_2026",
-          description: m.collector_pass_order_description({}, messageOptions(locale)),
+          description: t(locale, "collector_pass_order_description"),
           custom_id: userId,
           amount: {
             currency_code: COLLECTOR_PASS_CURRENCY,
@@ -201,7 +198,7 @@ async function createPaypalOrder(
   }, locale);
 
   if (!isRecord(data) || typeof data.id !== "string" || !data.id.trim()) {
-    throw new Error(m.error_paypal_invalid_order_id({}, messageOptions(locale)));
+    throw new Error(t(locale, "error_paypal_invalid_order_id"));
   }
 
   return data.id;
@@ -250,35 +247,25 @@ function validateCapturedOrder(
   locale: AppLocale,
 ) {
   if (!isRecord(data) || data.id !== expectedOrderId) {
-    throw new Error(
-      m.error_paypal_validate_order_failed({}, messageOptions(locale)),
-    );
+    throw new Error(t(locale, "error_paypal_validate_order_failed"));
   }
 
   if (data.status !== "COMPLETED") {
-    throw new Error(
-      m.error_paypal_order_not_completed({}, messageOptions(locale)),
-    );
+    throw new Error(t(locale, "error_paypal_order_not_completed"));
   }
 
   if (!Array.isArray(data.purchase_units) || data.purchase_units.length === 0) {
-    throw new Error(
-      m.error_paypal_invalid_purchase_units({}, messageOptions(locale)),
-    );
+    throw new Error(t(locale, "error_paypal_invalid_purchase_units"));
   }
 
   const purchaseUnit = data.purchase_units[0];
 
   if (!isRecord(purchaseUnit)) {
-    throw new Error(
-      m.error_paypal_invalid_purchase_unit({}, messageOptions(locale)),
-    );
+    throw new Error(t(locale, "error_paypal_invalid_purchase_unit"));
   }
 
   if (!isRecord(purchaseUnit.amount)) {
-    throw new Error(
-      m.error_paypal_missing_order_amount({}, messageOptions(locale)),
-    );
+    throw new Error(t(locale, "error_paypal_missing_order_amount"));
   }
 
   const orderAmountCents = parseAmountCents(
@@ -291,16 +278,14 @@ function validateCapturedOrder(
     orderAmountCents !== COLLECTOR_PASS_AMOUNT_CENTS ||
     orderCurrency !== COLLECTOR_PASS_CURRENCY
   ) {
-    throw new Error(
-      m.error_paypal_order_amount_mismatch({}, messageOptions(locale)),
-    );
+    throw new Error(t(locale, "error_paypal_order_amount_mismatch"));
   }
 
   if (
     !isRecord(purchaseUnit.payments) ||
     !Array.isArray(purchaseUnit.payments.captures)
   ) {
-    throw new Error(m.error_paypal_missing_capture({}, messageOptions(locale)));
+    throw new Error(t(locale, "error_paypal_missing_capture"));
   }
 
   const capture = purchaseUnit.payments.captures[0];
@@ -310,21 +295,15 @@ function validateCapturedOrder(
     typeof capture.id !== "string" ||
     !capture.id.trim()
   ) {
-    throw new Error(
-      m.error_paypal_invalid_capture_id({}, messageOptions(locale)),
-    );
+    throw new Error(t(locale, "error_paypal_invalid_capture_id"));
   }
 
   if (capture.status !== "COMPLETED") {
-    throw new Error(
-      m.error_paypal_capture_not_completed({}, messageOptions(locale)),
-    );
+    throw new Error(t(locale, "error_paypal_capture_not_completed"));
   }
 
   if (!isRecord(capture.amount)) {
-    throw new Error(
-      m.error_paypal_missing_capture_amount({}, messageOptions(locale)),
-    );
+    throw new Error(t(locale, "error_paypal_missing_capture_amount"));
   }
 
   const captureAmountCents = parseAmountCents(
@@ -337,9 +316,7 @@ function validateCapturedOrder(
     captureAmountCents !== COLLECTOR_PASS_AMOUNT_CENTS ||
     captureCurrency !== COLLECTOR_PASS_CURRENCY
   ) {
-    throw new Error(
-      m.error_paypal_capture_amount_mismatch({}, messageOptions(locale)),
-    );
+    throw new Error(t(locale, "error_paypal_capture_amount_mismatch"));
   }
 
   return {
@@ -356,9 +333,7 @@ async function requireCurrentUser(ctx: ActionCtx, locale: AppLocale) {
   );
 
   if (!currentUser) {
-    throw new Error(
-      m.error_collector_pass_auth_required({}, messageOptions(locale)),
-    );
+    throw new Error(t(locale, "error_collector_pass_auth_required"));
   }
 
   return currentUser;
@@ -432,12 +407,7 @@ export const upsertPendingPurchaseInternal = internalMutation({
 
     if (existingPurchase) {
       if (existingPurchase.completedAt) {
-        throw new Error(
-          m.error_collector_pass_already_purchased(
-            {},
-            messageOptions(args.locale),
-          ),
-        );
+        throw new Error(t(args.locale, "error_collector_pass_already_purchased"));
       }
 
       await ctx.db.patch(existingPurchase._id, {
@@ -467,17 +437,12 @@ export const finalizePurchaseInternal = internalMutation({
 
     if (!purchase) {
       throw new Error(
-        m.error_collector_pass_pending_purchase_user_not_found(
-          {},
-          messageOptions(args.locale),
-        ),
+        t(args.locale, "error_collector_pass_pending_purchase_user_not_found"),
       );
     }
 
     if (purchase.paypalOrderId !== args.paypalOrderId) {
-      throw new Error(
-        m.error_collector_pass_order_mismatch({}, messageOptions(args.locale)),
-      );
+      throw new Error(t(args.locale, "error_collector_pass_order_mismatch"));
     }
 
     const duplicateCapture = await getPurchaseByPaypalCaptureId(
@@ -486,21 +451,13 @@ export const finalizePurchaseInternal = internalMutation({
     );
 
     if (duplicateCapture && duplicateCapture._id !== purchase._id) {
-      throw new Error(
-        m.error_collector_pass_capture_processed(
-          {},
-          messageOptions(args.locale),
-        ),
-      );
+      throw new Error(t(args.locale, "error_collector_pass_capture_processed"));
     }
 
     if (purchase.completedAt) {
       if (purchase.paypalCaptureId !== args.paypalCaptureId) {
         throw new Error(
-          m.error_collector_pass_completed_with_other_capture(
-            {},
-            messageOptions(args.locale),
-          ),
+          t(args.locale, "error_collector_pass_completed_with_other_capture"),
         );
       }
 
@@ -539,9 +496,7 @@ export const createCollectorPassOrder = action({
     const currentUser = await requireCurrentUser(ctx, locale);
 
     if (currentUser.seller) {
-      throw new Error(
-        m.error_collector_pass_user_has_seller({}, messageOptions(locale)),
-      );
+      throw new Error(t(locale, "error_collector_pass_user_has_seller"));
     }
 
     const existingPurchase: CollectorPassPurchase | null = await ctx.runQuery(
@@ -550,9 +505,7 @@ export const createCollectorPassOrder = action({
     );
 
     if (existingPurchase?.completedAt) {
-      throw new Error(
-        m.error_collector_pass_already_purchased({}, messageOptions(locale)),
-      );
+      throw new Error(t(locale, "error_collector_pass_already_purchased"));
     }
 
     const accessToken = await getPaypalAccessToken(locale);
@@ -593,18 +546,11 @@ export const captureCollectorPassOrder = action({
     );
 
     if (!purchase) {
-      throw new Error(
-        m.error_collector_pass_pending_purchase_not_found(
-          {},
-          messageOptions(locale),
-        ),
-      );
+      throw new Error(t(locale, "error_collector_pass_pending_purchase_not_found"));
     }
 
     if (purchase.paypalOrderId !== args.paypalOrderId) {
-      throw new Error(
-        m.error_collector_pass_order_mismatch({}, messageOptions(locale)),
-      );
+      throw new Error(t(locale, "error_collector_pass_order_mismatch"));
     }
 
     if (purchase.completedAt && purchase.paypalCaptureId) {

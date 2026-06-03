@@ -7,8 +7,8 @@ import {
   type ActionCtx,
 } from "./_generated/server";
 import { ConvexError, v } from "convex/values";
-import * as m from "../lib/paraglide/messages.js";
-import { messageOptions, type AppLocale } from "./i18n";
+import { t } from "./messages";
+import { type AppLocale } from "./i18n";
 import { resend, RESEND_NO_REPLY_FROM } from "./resend";
 import type { CurrentUserData, User } from "./users";
 import type { Listing } from "./listings";
@@ -35,10 +35,9 @@ function buildStickerName(sticker: Doc<"stickers">) {
 }
 
 function buildEmailSubject(sticker: Doc<"stickers">, locale: AppLocale) {
-  return m.email_contact_subject(
-    { stickerName: buildStickerName(sticker) },
-    messageOptions(locale),
-  );
+  return t(locale, "email_contact_subject", {
+    stickerName: buildStickerName(sticker),
+  });
 }
 
 function buildEmailText(args: {
@@ -48,20 +47,16 @@ function buildEmailText(args: {
   message: string;
 }) {
   return [
-    m.email_contact_greeting(
-      { sellerName: args.sellerName },
-      messageOptions(args.locale),
-    ),
+    t(args.locale, "email_contact_greeting", { sellerName: args.sellerName }),
     "",
-    m.email_contact_intro(
-      { stickerName: buildStickerName(args.sticker) },
-      messageOptions(args.locale),
-    ),
+    t(args.locale, "email_contact_intro", {
+      stickerName: buildStickerName(args.sticker),
+    }),
     "",
-    m.email_contact_message_label({}, messageOptions(args.locale)),
+    t(args.locale, "email_contact_message_label"),
     args.message,
     "",
-    m.email_contact_safety_notice({}, messageOptions(args.locale)),
+    t(args.locale, "email_contact_safety_notice"),
   ].join("\n");
 }
 
@@ -79,18 +74,18 @@ function buildEmailHtml(args: {
 
   return `
     <div style="font-family: Inter, Arial, sans-serif; color: #111827; line-height: 1.6;">
-      <p>${m.email_contact_greeting({ sellerName: args.sellerName }, messageOptions(args.locale))}</p>
+      <p>${t(args.locale, "email_contact_greeting", { sellerName: args.sellerName })}</p>
       <p>
-        ${m.email_contact_intro({ stickerName: buildStickerName(args.sticker) }, messageOptions(args.locale))}
+        ${t(args.locale, "email_contact_intro", { stickerName: buildStickerName(args.sticker) })}
       </p>
-      <p style="margin-bottom: 8px;"><strong>${m.email_contact_message_label({}, messageOptions(args.locale))}</strong></p>
+      <p style="margin-bottom: 8px;"><strong>${t(args.locale, "email_contact_message_label")}</strong></p>
       <div
         style="border-radius: 16px; background: #f3f4f6; padding: 16px; white-space: pre-wrap;"
       >
         ${messageHtml}
       </div>
       <p style="margin-top: 20px; color: #6b7280; font-size: 13px;">
-        ${m.email_contact_safety_notice({}, messageOptions(args.locale))}
+        ${t(args.locale, "email_contact_safety_notice")}
       </p>
     </div>
   `;
@@ -105,7 +100,7 @@ async function requireCurrentUser(ctx: ActionCtx, locale: AppLocale) {
   if (!currentUser) {
     throwContactError(
       "AUTHENTICATION_REQUIRED",
-      m.error_authentication_required({}, messageOptions(locale)),
+      t(locale, "error_authentication_required"),
     );
   }
 
@@ -123,7 +118,7 @@ export const resolveSellerContactTarget = internalQuery({
     if (!listing || listing.status !== "active") {
       throwContactError(
         "CONTACT_LISTING_UNAVAILABLE",
-        m.error_contact_listing_unavailable({}, messageOptions(args.locale)),
+        t(args.locale, "error_contact_listing_unavailable"),
       );
     }
 
@@ -135,7 +130,7 @@ export const resolveSellerContactTarget = internalQuery({
     if (!seller || !sticker) {
       throwContactError(
         "CONTACT_TARGET_UNAVAILABLE",
-        m.error_contact_target_unavailable({}, messageOptions(args.locale)),
+        t(args.locale, "error_contact_target_unavailable"),
       );
     }
 
@@ -144,10 +139,7 @@ export const resolveSellerContactTarget = internalQuery({
     if (!sellerUser?.email) {
       throwContactError(
         "CONTACT_SELLER_EMAIL_UNAVAILABLE",
-        m.error_contact_seller_email_unavailable(
-          {},
-          messageOptions(args.locale),
-        ),
+        t(args.locale, "error_contact_seller_email_unavailable"),
       );
     }
 
@@ -166,7 +158,7 @@ export const consumeFreeSellerContactIfNeeded = internalMutation({
     if (!user) {
       throwContactError(
         "CONTACT_USER_NOT_FOUND",
-        m.error_contact_user_not_found({}, messageOptions(args.locale)),
+        t(args.locale, "error_contact_user_not_found"),
       );
     }
 
@@ -182,7 +174,7 @@ export const consumeFreeSellerContactIfNeeded = internalMutation({
     if (user.freeSellerContactsRemaining <= 0) {
       throwContactError(
         "CONTACT_FREE_LIMIT_REACHED",
-        m.error_contact_free_limit_reached({}, messageOptions(args.locale)),
+        t(args.locale, "error_contact_free_limit_reached"),
       );
     }
 
@@ -215,7 +207,7 @@ export const assertContactRateLimit = internalQuery({
     if (recentContacts.length > 0) {
       throwContactError(
         "CONTACT_RATE_LIMITED",
-        m.error_contact_rate_limited({}, messageOptions(args.locale)),
+        t(args.locale, "error_contact_rate_limited"),
       );
     }
   },
@@ -266,14 +258,14 @@ export const sendSellerContact = action({
     if (!message) {
       throwContactError(
         "CONTACT_MESSAGE_REQUIRED",
-        m.error_contact_message_required({}, messageOptions(locale)),
+        t(locale, "error_contact_message_required"),
       );
     }
 
     if (message.length > MAX_MESSAGE_LENGTH) {
       throwContactError(
         "CONTACT_MESSAGE_TOO_LONG",
-        m.error_contact_message_too_long({}, messageOptions(locale)),
+        t(locale, "error_contact_message_too_long"),
       );
     }
 
@@ -286,7 +278,7 @@ export const sendSellerContact = action({
     if (target.seller.userId === currentUser.user._id) {
       throwContactError(
         "CONTACT_SELF_NOT_ALLOWED",
-        m.error_contact_self_not_allowed({}, messageOptions(locale)),
+        t(locale, "error_contact_self_not_allowed"),
       );
     }
 
@@ -324,7 +316,7 @@ export const sendSellerContact = action({
       if (result.error) {
         throwContactError(
           "CONTACT_SEND_FAILED",
-          m.error_contact_send_failed({}, messageOptions(locale)),
+          t(locale, "error_contact_send_failed"),
         );
       }
 

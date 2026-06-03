@@ -17,6 +17,7 @@ import type * as http from "../http.js";
 import type * as i18n from "../i18n.js";
 import type * as listings from "../listings.js";
 import type * as locationSeed from "../locationSeed.js";
+import type * as messages from "../messages.js";
 import type * as resend from "../resend.js";
 import type * as sellers from "../sellers.js";
 import type * as stickers from "../stickers.js";
@@ -38,6 +39,7 @@ declare const fullApi: ApiFromModules<{
   i18n: typeof i18n;
   listings: typeof listings;
   locationSeed: typeof locationSeed;
+  messages: typeof messages;
   resend: typeof resend;
   sellers: typeof sellers;
   stickers: typeof stickers;

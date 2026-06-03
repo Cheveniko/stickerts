@@ -6,10 +6,10 @@ import {
   type QueryCtx,
 } from "./_generated/server";
 import { ConvexError, v } from "convex/values";
-import * as m from "../lib/paraglide/messages.js";
+import { t } from "./messages";
 import { getCurrentAuthUserId, requireAuthUserId } from "./authHelpers";
 import { getCityBySlug, type City } from "./cities";
-import { messageOptions, type AppLocale } from "./i18n";
+import { type AppLocale } from "./i18n";
 import type { User } from "./users";
 
 export type Seller = Doc<"sellers">;
@@ -55,7 +55,7 @@ export async function requireCurrentSeller(
   if (!seller) {
     throw new ConvexError({
       code: "SELLER_NOT_FOUND",
-      message: m.error_seller_not_found({}, messageOptions(locale)),
+      message: t(locale, "error_seller_not_found"),
     });
   }
 
@@ -68,7 +68,7 @@ function normalizeUsername(username: string, locale?: AppLocale) {
   if (!USERNAME_REGEX.test(normalizedUsername)) {
     throw new ConvexError({
       code: "INVALID_USERNAME",
-      message: m.error_invalid_username({}, messageOptions(locale)),
+      message: t(locale, "error_invalid_username"),
     });
   }
 
@@ -143,7 +143,7 @@ export async function generateUniqueSellerUsername(
 
   throw new ConvexError({
     code: "USERNAME_GENERATION_FAILED",
-    message: m.error_username_generation_failed({}, messageOptions(locale)),
+    message: t(locale, "error_username_generation_failed"),
   });
 }
 
@@ -153,7 +153,7 @@ function normalizeCurrency(currency: string, locale?: AppLocale) {
   if (!DEFAULT_CURRENCY_REGEX.test(normalizedCurrency)) {
     throw new ConvexError({
       code: "INVALID_DEFAULT_CURRENCY",
-      message: m.error_invalid_default_currency({}, messageOptions(locale)),
+      message: t(locale, "error_invalid_default_currency"),
     });
   }
 
@@ -175,9 +175,7 @@ export async function activateSellerForCollectorPass(
   const user = await ctx.db.get(userId);
 
   if (!user) {
-    throw new Error(
-      m.error_seller_activation_user_not_found({}, messageOptions(locale)),
-    );
+    throw new Error(t(locale, "error_seller_activation_user_not_found"));
   }
 
   const username = await generateUniqueSellerUsername(ctx, user, locale);
@@ -222,7 +220,7 @@ export const updateCurrentSellerUsername = mutation({
     if (existingSeller && existingSeller._id !== seller._id) {
       throw new ConvexError({
         code: "USERNAME_TAKEN",
-        message: m.error_username_taken({}, messageOptions()),
+        message: t(undefined, "error_username_taken"),
       });
     }
 
@@ -255,7 +253,7 @@ export const updateCurrentSellerDefaultCity = mutation({
       if (!city) {
         throw new ConvexError({
           code: "CITY_NOT_FOUND",
-          message: m.error_city_not_found({}, messageOptions()),
+          message: t(undefined, "error_city_not_found"),
         });
       }
 

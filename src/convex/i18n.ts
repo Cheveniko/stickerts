@@ -6,10 +6,6 @@ export function normalizeLocale(locale?: string | null): AppLocale {
   return locale === "en" ? "en" : "es";
 }
 
-export function messageOptions(locale?: string | null) {
-  return { locale: normalizeLocale(locale) } as const;
-}
-
 export function getLocaleFromUrl(url: string): AppLocale {
   try {
     const parsedUrl = new URL(url);
