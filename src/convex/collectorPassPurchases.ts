@@ -115,7 +115,11 @@ async function readJsonResponse(response: Response) {
   }
 }
 
-async function paypalRequest(path: string, init: RequestInit, locale: AppLocale) {
+async function paypalRequest(
+  path: string,
+  init: RequestInit,
+  locale: AppLocale,
+) {
   const response = await fetch(`${getPaypalBaseUrl()}${path}`, init);
   const data = await readJsonResponse(response);
 
@@ -123,7 +127,8 @@ async function paypalRequest(path: string, init: RequestInit, locale: AppLocale)
     throw new PaypalApiError(
       response.status,
       data,
-      extractPaypalErrorMessage(data) ?? t(locale, "error_paypal_request_rejected"),
+      extractPaypalErrorMessage(data) ??
+        t(locale, "error_paypal_request_rejected"),
     );
   }
 
@@ -146,14 +151,18 @@ function isOrderAlreadyCapturedError(error: unknown) {
 
 async function getPaypalAccessToken(locale: AppLocale) {
   const { clientId, clientSecret } = getPaypalCredentials(locale);
-  const data = await paypalRequest("/v1/oauth2/token", {
-    method: "POST",
-    headers: {
-      Authorization: buildPaypalAuthorization(clientId, clientSecret),
-      "Content-Type": "application/x-www-form-urlencoded",
+  const data = await paypalRequest(
+    "/v1/oauth2/token",
+    {
+      method: "POST",
+      headers: {
+        Authorization: buildPaypalAuthorization(clientId, clientSecret),
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({ grant_type: "client_credentials" }),
     },
-    body: new URLSearchParams({ grant_type: "client_credentials" }),
-  }, locale);
+    locale,
+  );
 
   if (
     !isRecord(data) ||
@@ -171,31 +180,35 @@ async function createPaypalOrder(
   userId: string,
   locale: AppLocale,
 ) {
-  const data = await paypalRequest("/v2/checkout/orders", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      intent: "CAPTURE",
-      application_context: {
-        shipping_preference: "NO_SHIPPING",
-        user_action: "PAY_NOW",
+  const data = await paypalRequest(
+    "/v2/checkout/orders",
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
       },
-      purchase_units: [
-        {
-          reference_id: "collector_pass_2026",
-          description: t(locale, "collector_pass_order_description"),
-          custom_id: userId,
-          amount: {
-            currency_code: COLLECTOR_PASS_CURRENCY,
-            value: formatAmountCents(COLLECTOR_PASS_AMOUNT_CENTS),
-          },
+      body: JSON.stringify({
+        intent: "CAPTURE",
+        application_context: {
+          shipping_preference: "NO_SHIPPING",
+          user_action: "PAY_NOW",
         },
-      ],
-    }),
-  }, locale);
+        purchase_units: [
+          {
+            reference_id: "collector_pass_2026",
+            description: t(locale, "collector_pass_order_description"),
+            custom_id: userId,
+            amount: {
+              currency_code: COLLECTOR_PASS_CURRENCY,
+              value: formatAmountCents(COLLECTOR_PASS_AMOUNT_CENTS),
+            },
+          },
+        ],
+      }),
+    },
+    locale,
+  );
 
   if (!isRecord(data) || typeof data.id !== "string" || !data.id.trim()) {
     throw new Error(t(locale, "error_paypal_invalid_order_id"));
@@ -407,7 +420,9 @@ export const upsertPendingPurchaseInternal = internalMutation({
 
     if (existingPurchase) {
       if (existingPurchase.completedAt) {
-        throw new Error(t(args.locale, "error_collector_pass_already_purchased"));
+        throw new Error(
+          t(args.locale, "error_collector_pass_already_purchased"),
+        );
       }
 
       await ctx.db.patch(existingPurchase._id, {
@@ -509,7 +524,11 @@ export const createCollectorPassOrder = action({
     }
 
     const accessToken = await getPaypalAccessToken(locale);
-    const paypalOrderId = await createPaypalOrder(accessToken, currentUser.user._id, locale);
+    const paypalOrderId = await createPaypalOrder(
+      accessToken,
+      currentUser.user._id,
+      locale,
+    );
     const createdAt = Date.now();
 
     await ctx.runMutation(
@@ -546,7 +565,9 @@ export const captureCollectorPassOrder = action({
     );
 
     if (!purchase) {
-      throw new Error(t(locale, "error_collector_pass_pending_purchase_not_found"));
+      throw new Error(
+        t(locale, "error_collector_pass_pending_purchase_not_found"),
+      );
     }
 
     if (purchase.paypalOrderId !== args.paypalOrderId) {
@@ -574,7 +595,11 @@ export const captureCollectorPassOrder = action({
         throw error;
       }
 
-      paypalOrderData = await getPaypalOrder(accessToken, args.paypalOrderId, locale);
+      paypalOrderData = await getPaypalOrder(
+        accessToken,
+        args.paypalOrderId,
+        locale,
+      );
     }
 
     const capture = validateCapturedOrder(
