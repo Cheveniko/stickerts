@@ -7,36 +7,41 @@
   import { fade, fly } from "svelte/transition";
   import { cubicIn, cubicOut } from "svelte/easing";
   import { toast } from "svelte-sonner";
-  import { Textarea } from "$lib/components/ui/textarea/index.js";
+  import { Input } from "$lib/components/ui/input/index.js";
+  import { Label } from "$lib/components/ui/label/index.js";
   import { Button } from "$lib/components/ui/button/index.js";
   import MessageCircleIcon from "@lucide/svelte/icons/message-circle";
   import MailIcon from "@lucide/svelte/icons/mail";
   import ShieldIcon from "@lucide/svelte/icons/shield";
   import GiftIcon from "@lucide/svelte/icons/gift";
-import XIcon from "@lucide/svelte/icons/x";
-import * as m from "$lib/paraglide/messages";
-import { getLocale } from "$lib/paraglide/runtime";
+  import XIcon from "@lucide/svelte/icons/x";
+  import * as m from "$lib/paraglide/messages";
+  import { getLocale } from "$lib/paraglide/runtime";
 
   type Props = {
     listing: ListingWithRelations;
     open: boolean;
     freeContactsRemaining?: number | null;
+    buyerEmail?: string | null;
   };
 
   type ContactOption = "whatsapp" | "email";
 
-  const MAX_MESSAGE_LENGTH = 500;
+  const PHONE_MIN_LENGTH = 6;
+  const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   let {
     listing,
     open = $bindable(),
     freeContactsRemaining = null,
+    buyerEmail = null,
   }: Props = $props();
   const convex = useConvexClient();
 
-  let selectedOption = $state<ContactOption | null>(null);
-  let message = $state("");
-  let textareaRef = $state<HTMLTextAreaElement | null>(null);
+  let selectedOption = $state<ContactOption | null>("whatsapp");
+  let contactValue = $state("");
+  let contactBlurred = $state(false);
+  let inputRef = $state<HTMLInputElement | null>(null);
   let isSending = $state(false);
   let submitError = $state("");
 
@@ -48,40 +53,49 @@ import { getLocale } from "$lib/paraglide/runtime";
         : m.purchase_subtitle_both(),
   );
 
-  const stickerCodeLabel = $derived(
-    listing.sticker.code ? ` - ${listing.sticker.code}` : "",
+  let trimmedContactValue = $derived(contactValue.trim());
+  let isEmailValid = $derived(
+    selectedOption === "email" && EMAIL_REGEX.test(trimmedContactValue),
   );
-
-  const messagePrefill = $derived(
-    listing.intent === "trade"
-      ? (channel: string) =>
-          m.purchase_prefill_trade({
-            sellerName: listing.sellerName,
-            stickerLabel: listing.sticker.label,
-            stickerCode: stickerCodeLabel,
-            channel,
-          })
-      : listing.intent === "sale_or_trade"
-        ? (channel: string) =>
-            m.purchase_prefill_both({
-              sellerName: listing.sellerName,
-              stickerLabel: listing.sticker.label,
-              stickerCode: stickerCodeLabel,
-              channel,
-            })
-        : (channel: string) =>
-            m.purchase_prefill_sale({
-              sellerName: listing.sellerName,
-              stickerLabel: listing.sticker.label,
-              stickerCode: stickerCodeLabel,
-              channel,
-            }),
+  let normalizedPhoneValue = $derived(
+    trimmedContactValue.replace(/[^0-9]/g, ""),
   );
+  let isPhoneValid = $derived(
+    selectedOption === "whatsapp" &&
+      trimmedContactValue === normalizedPhoneValue &&
+      normalizedPhoneValue.length >= PHONE_MIN_LENGTH,
+  );
+  let contactValueError = $derived.by(() => {
+    if (!selectedOption || trimmedContactValue.length === 0) {
+      return "";
+    }
 
-  let trimmedMessage = $derived(message.trim());
-  let messageTooLong = $derived(message.length > MAX_MESSAGE_LENGTH);
+    if (selectedOption === "email" && !isEmailValid) {
+      return m.purchase_email_invalid();
+    }
+
+    if (selectedOption === "whatsapp" && !isPhoneValid) {
+      return m.purchase_phone_invalid();
+    }
+
+    return "";
+  });
   let canSubmit = $derived(
-    trimmedMessage.length > 0 && !messageTooLong && !isSending,
+    selectedOption !== null &&
+      trimmedContactValue.length > 0 &&
+      !contactValueError &&
+      !isSending,
+  );
+  let showContactError = $derived(contactBlurred && !!contactValueError);
+  let contactLabel = $derived(
+    selectedOption === "email"
+      ? m.purchase_email_label()
+      : m.purchase_phone_label(),
+  );
+  let contactPlaceholder = $derived(
+    selectedOption === "email"
+      ? m.purchase_email_placeholder()
+      : m.purchase_phone_placeholder(),
   );
 
   const closeOnEscape = closeOnEscapeHandler(() => open, close);
@@ -96,8 +110,9 @@ import { getLocale } from "$lib/paraglide/runtime";
   ];
 
   function resetModalState() {
-    selectedOption = null;
-    message = "";
+    selectedOption = "whatsapp";
+    contactValue = "";
+    contactBlurred = false;
     submitError = "";
     isSending = false;
   }
@@ -115,25 +130,49 @@ import { getLocale } from "$lib/paraglide/runtime";
 
   function selectOption(option: { id: ContactOption; label: string }) {
     selectedOption = option.id;
-    const prefill = messagePrefill(option.label);
-    message = prefill;
+    contactValue = option.id === "email" ? (buyerEmail ?? "") : "";
+    contactBlurred = false;
+    submitError = "";
 
-    const len = prefill.length;
     setTimeout(() => {
-      textareaRef?.focus();
-      textareaRef?.setSelectionRange(len, len);
+      inputRef?.focus();
+      const len = contactValue.length;
+      inputRef?.setSelectionRange(len, len);
     }, 0);
+  }
+
+  function handleContactInput(event: Event) {
+    submitError = "";
+
+    if (selectedOption !== "whatsapp") {
+      return;
+    }
+
+    const target = event.currentTarget;
+    if (!(target instanceof HTMLInputElement)) {
+      return;
+    }
+
+    const numericValue = target.value.replace(/\D/g, "");
+    if (numericValue !== contactValue) {
+      contactValue = numericValue;
+    }
+  }
+
+  function handleContactBlur() {
+    contactBlurred = true;
   }
 
   async function sendMessage() {
     submitError = "";
 
-    if (messageTooLong) {
-      submitError = m.purchase_message_too_long({ count: MAX_MESSAGE_LENGTH });
-      return;
-    }
-
-    if (!trimmedMessage || isSending) {
+    if (
+      !selectedOption ||
+      !trimmedContactValue ||
+      contactValueError ||
+      isSending
+    ) {
+      contactBlurred = true;
       return;
     }
 
@@ -142,7 +181,8 @@ import { getLocale } from "$lib/paraglide/runtime";
     try {
       await convex.action(api.contacts.sendSellerContact, {
         listingId: listing._id,
-        message: trimmedMessage,
+        contactMethod: selectedOption,
+        contactValue: trimmedContactValue,
         locale: getLocale(),
       });
 
@@ -230,19 +270,34 @@ import { getLocale } from "$lib/paraglide/runtime";
           </div>
         </div>
 
-        <!-- Textarea -->
-        <Textarea
-          bind:ref={textareaRef}
-          bind:value={message}
-          class="min-h-[88px] leading-relaxed placeholder:text-xs"
-          disabled={isSending}
-          placeholder={m.purchase_message_placeholder()}
-        />
-
-        {#if messageTooLong}
-          <p class="text-xs text-destructive">
-            {m.purchase_message_too_long({ count: MAX_MESSAGE_LENGTH })}
-          </p>
+        {#if selectedOption}
+          <div class="flex flex-col gap-1.5">
+            <Label for="purchase-contact-value">{contactLabel}</Label>
+            <Input
+              id="purchase-contact-value"
+              bind:ref={inputRef}
+              bind:value={contactValue}
+              type={selectedOption === "email" ? "email" : "tel"}
+              inputmode={selectedOption === "email" ? "email" : "numeric"}
+              autocomplete={selectedOption === "email" ? "email" : "tel"}
+              class="leading-relaxed"
+              disabled={isSending}
+              placeholder={contactPlaceholder}
+              oninput={handleContactInput}
+              onblur={handleContactBlur}
+            />
+            {#if showContactError}
+              <p class="text-xs text-destructive">
+                {contactValueError}
+              </p>
+            {:else}
+              <p class="text-xs text-muted-foreground">
+                {selectedOption === "email"
+                  ? m.purchase_email_help()
+                  : m.purchase_phone_help()}
+              </p>
+            {/if}
+          </div>
         {/if}
 
         {#if submitError}

@@ -18,6 +18,13 @@ import type { Sticker } from "./stickers";
 const MAX_MESSAGE_LENGTH = 500;
 const CONTACT_RATE_LIMIT_WINDOW_MS = 24 * 60 * 60 * 1000;
 const localeValidator = v.optional(v.union(v.literal("es"), v.literal("en")));
+const contactMethodValidator = v.union(
+  v.literal("whatsapp"),
+  v.literal("email"),
+);
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PHONE_ALLOWED_CHARS_REGEX = /^[0-9+()\-\s]+$/;
+const PHONE_MIN_LENGTH = 6;
 
 type ContactTarget = {
   listing: Listing;
@@ -25,6 +32,8 @@ type ContactTarget = {
   sellerUser: User;
   sticker: Sticker;
 };
+
+type ContactMethod = "whatsapp" | "email";
 
 function throwContactError(code: string, message: string): never {
   throw new ConvexError({ code, message });
@@ -53,10 +62,7 @@ function buildEmailText(args: {
       stickerName: buildStickerName(args.sticker),
     }),
     "",
-    t(args.locale, "email_contact_message_label"),
     args.message,
-    "",
-    t(args.locale, "email_contact_safety_notice"),
   ].join("\n");
 }
 
@@ -78,17 +84,67 @@ function buildEmailHtml(args: {
       <p>
         ${t(args.locale, "email_contact_intro", { stickerName: buildStickerName(args.sticker) })}
       </p>
-      <p style="margin-bottom: 8px;"><strong>${t(args.locale, "email_contact_message_label")}</strong></p>
-      <div
-        style="border-radius: 16px; background: #f3f4f6; padding: 16px; white-space: pre-wrap;"
-      >
-        ${messageHtml}
-      </div>
-      <p style="margin-top: 20px; color: #6b7280; font-size: 13px;">
-        ${t(args.locale, "email_contact_safety_notice")}
-      </p>
+      <p>${messageHtml}</p>
     </div>
   `;
+}
+
+function normalizeContactValue(contactValue: string) {
+  return contactValue.trim();
+}
+
+function validateContactValue(args: {
+  locale: AppLocale;
+  contactMethod: ContactMethod;
+  contactValue: string;
+}) {
+  if (!args.contactValue) {
+    throwContactError(
+      "CONTACT_VALUE_REQUIRED",
+      t(args.locale, "error_contact_value_required"),
+    );
+  }
+
+  if (args.contactMethod === "email") {
+    if (!EMAIL_REGEX.test(args.contactValue)) {
+      throwContactError(
+        "CONTACT_EMAIL_INVALID",
+        t(args.locale, "error_contact_email_invalid"),
+      );
+    }
+
+    return;
+  }
+
+  const phoneDigits = args.contactValue.replace(/[^0-9]/g, "");
+  if (
+    !PHONE_ALLOWED_CHARS_REGEX.test(args.contactValue) ||
+    phoneDigits.length < PHONE_MIN_LENGTH
+  ) {
+    throwContactError(
+      "CONTACT_PHONE_INVALID",
+      t(args.locale, "error_contact_phone_invalid"),
+    );
+  }
+}
+
+function buildBuyerContactMessage(args: {
+  locale: AppLocale;
+  sticker: Doc<"stickers">;
+  contactMethod: ContactMethod;
+  contactValue: string;
+}) {
+  const contactChannel =
+    args.contactMethod === "email"
+      ? t(args.locale, "common_email")
+      : t(args.locale, "common_whatsapp");
+
+  return [
+    t(args.locale, "email_contact_buyer_channel", {
+      channel: contactChannel,
+    }),
+    args.contactValue,
+  ].join("\n");
 }
 
 async function requireCurrentUser(ctx: ActionCtx, locale: AppLocale) {
@@ -247,25 +303,25 @@ export const refundFreeSellerContactIfNeeded = internalMutation({
 export const sendSellerContact = action({
   args: {
     listingId: v.id("listings"),
-    message: v.string(),
+    contactMethod: contactMethodValidator,
+    contactValue: v.string(),
     locale: localeValidator,
   },
   handler: async (ctx, args) => {
     const locale = args.locale ?? "es";
-    const message = args.message.trim();
+    const contactValue = normalizeContactValue(args.contactValue);
     const nowMs = Date.now();
 
-    if (!message) {
-      throwContactError(
-        "CONTACT_MESSAGE_REQUIRED",
-        t(locale, "error_contact_message_required"),
-      );
-    }
+    validateContactValue({
+      locale,
+      contactMethod: args.contactMethod,
+      contactValue,
+    });
 
-    if (message.length > MAX_MESSAGE_LENGTH) {
+    if (!args.contactMethod) {
       throwContactError(
-        "CONTACT_MESSAGE_TOO_LONG",
-        t(locale, "error_contact_message_too_long"),
+        "CONTACT_METHOD_REQUIRED",
+        t(locale, "error_contact_method_required"),
       );
     }
 
@@ -293,6 +349,20 @@ export const sendSellerContact = action({
       internal.contacts.consumeFreeSellerContactIfNeeded,
       { userId: currentUser.user._id, locale },
     );
+
+    const message = buildBuyerContactMessage({
+      locale,
+      sticker: target.sticker,
+      contactMethod: args.contactMethod,
+      contactValue,
+    });
+
+    if (message.length > MAX_MESSAGE_LENGTH) {
+      throwContactError(
+        "CONTACT_MESSAGE_TOO_LONG",
+        t(locale, "error_contact_message_too_long"),
+      );
+    }
 
     try {
       const result = await resend.emails.send({

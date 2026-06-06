@@ -31,7 +31,11 @@ const messages = {
       "Ya usaste tu contacto con vendedores gratis.",
     error_contact_rate_limited:
       "Ya contactaste a este vendedor por esta publicación en las últimas 24 horas.",
-    error_contact_message_required: "Escribe un mensaje antes de enviarlo.",
+    error_contact_method_required: "Selecciona cómo quieres que te contacten.",
+    error_contact_value_required:
+      "Ingresa tu dato de contacto antes de enviarlo.",
+    error_contact_email_invalid: "Ingresa un email válido.",
+    error_contact_phone_invalid: "Ingresa un número de WhatsApp válido.",
     error_contact_message_too_long: "Tu mensaje es demasiado largo.",
     error_contact_self_not_allowed:
       "No puedes contactarte con tu propia publicación.",
@@ -47,8 +51,7 @@ const messages = {
     error_paypal_request_rejected:
       "PayPal rechazó la solicitud del Pase de Coleccionista.",
     error_paypal_invalid_token: "PayPal no devolvió un token válido.",
-    error_paypal_invalid_order_id:
-      "PayPal no devolvió un order id válido.",
+    error_paypal_invalid_order_id: "PayPal no devolvió un order id válido.",
     error_paypal_validate_order_failed:
       "No pudimos validar la orden de PayPal.",
     error_paypal_order_not_completed:
@@ -62,8 +65,7 @@ const messages = {
     error_paypal_order_amount_mismatch:
       "El monto de la orden de PayPal no coincide con el Pase de Coleccionista.",
     error_paypal_missing_capture: "PayPal no devolvió la captura del pago.",
-    error_paypal_invalid_capture_id:
-      "PayPal no devolvió un capture id válido.",
+    error_paypal_invalid_capture_id: "PayPal no devolvió un capture id válido.",
     error_paypal_capture_not_completed:
       "PayPal no completó la captura del pago.",
     error_paypal_missing_capture_amount:
@@ -94,9 +96,10 @@ const messages = {
     email_contact_greeting: "Hola {sellerName},",
     email_contact_intro:
       "Recibiste un nuevo mensaje sobre tu cromo {stickerName} en Stickerts.",
-    email_contact_message_label: "Mensaje del comprador:",
-    email_contact_safety_notice:
-      "Te recomendamos coordinar la transacción en un lugar público.",
+    email_contact_buyer_channel:
+      "Puedes contactarte con la persona interesada por {channel} en:",
+    common_email: "email",
+    common_whatsapp: "WhatsApp",
   },
   en: {
     error_authentication_required: "You need to sign in to do this.",
@@ -119,8 +122,7 @@ const messages = {
       "The selected image doesn't belong to this seller.",
     error_wanted_sticker_not_found:
       "One of the requested trade stickers doesn't exist.",
-    error_contact_listing_unavailable:
-      "This sticker is no longer available.",
+    error_contact_listing_unavailable: "This sticker is no longer available.",
     error_contact_target_unavailable: "We couldn't prepare this contact.",
     error_contact_seller_email_unavailable:
       "This seller doesn't have an available contact method.",
@@ -129,7 +131,10 @@ const messages = {
       "You've already used your free seller contact.",
     error_contact_rate_limited:
       "You've already contacted this seller for this listing in the last 24 hours.",
-    error_contact_message_required: "Write a message before sending it.",
+    error_contact_method_required: "Choose how you'd like to be contacted.",
+    error_contact_value_required: "Enter your contact details before sending.",
+    error_contact_email_invalid: "Enter a valid email address.",
+    error_contact_phone_invalid: "Enter a valid WhatsApp number.",
     error_contact_message_too_long: "Your message is too long.",
     error_contact_self_not_allowed: "You can't contact your own listing.",
     error_contact_send_failed:
@@ -153,14 +158,11 @@ const messages = {
       "PayPal didn't return valid purchase units.",
     error_paypal_invalid_purchase_unit:
       "PayPal didn't return a valid purchase unit.",
-    error_paypal_missing_order_amount:
-      "PayPal didn't return the order amount.",
+    error_paypal_missing_order_amount: "PayPal didn't return the order amount.",
     error_paypal_order_amount_mismatch:
       "The PayPal order amount doesn't match the Collector Pass.",
-    error_paypal_missing_capture:
-      "PayPal didn't return the payment capture.",
-    error_paypal_invalid_capture_id:
-      "PayPal didn't return a valid capture id.",
+    error_paypal_missing_capture: "PayPal didn't return the payment capture.",
+    error_paypal_invalid_capture_id: "PayPal didn't return a valid capture id.",
     error_paypal_capture_not_completed:
       "PayPal didn't complete the payment capture.",
     error_paypal_missing_capture_amount:
@@ -192,9 +194,10 @@ const messages = {
     email_contact_greeting: "Hi {sellerName},",
     email_contact_intro:
       "You received a new message about your sticker {stickerName} on Stickerts.",
-    email_contact_message_label: "Buyer's message:",
-    email_contact_safety_notice:
-      "We recommend arranging the transaction in a public place.",
+    email_contact_buyer_channel:
+      "You can contact the interested person via {channel} at:",
+    common_email: "email",
+    common_whatsapp: "WhatsApp",
   },
 } as const;
 

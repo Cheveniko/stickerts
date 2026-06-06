@@ -68,6 +68,10 @@
       : null,
   );
 
+  const buyerEmail = $derived(
+    currentUser.status === "authenticated" ? currentUser.user.email : null,
+  );
+
   const usedFreeContact = $derived(
     currentUser.status === "authenticated" &&
       currentUser.seller === null &&
@@ -181,7 +185,12 @@
   </Card.Footer>
 </Card.Root>
 
-<PurchaseModal {listing} bind:open={purchaseOpen} {freeContactsRemaining} />
+<PurchaseModal
+  {listing}
+  bind:open={purchaseOpen}
+  {freeContactsRemaining}
+  {buyerEmail}
+/>
 <CollectorPassModal
   bind:open={collectorPassOpen}
   onsuccess={handleCollectorPassSuccess}
