@@ -4,7 +4,7 @@ import { localizeHref } from "$lib/paraglide/runtime";
 export const SITE_NAME = "Stickerts";
 export const SITE_URL = "https://www.stickerts.com";
 export const DEFAULT_OG_IMAGE_URL =
-  "https://stickerts.s3.us-east-1.amazonaws.com/listings/og-image-stickerts.jpg";
+  "https://stickerts.s3.us-east-1.amazonaws.com/listings/og-image-2.jpg";
 
 export type SeoMetadata = {
   title: string;
