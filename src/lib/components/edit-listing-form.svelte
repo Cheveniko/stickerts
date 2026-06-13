@@ -6,7 +6,6 @@
   import { Label } from "$lib/components/ui/label/index.js";
   import { Textarea } from "$lib/components/ui/textarea/index.js";
   import * as Select from "$lib/components/ui/select/index.js";
-  import { Switch } from "$lib/components/ui/switch/index.js";
   import ImageUploader from "$lib/components/image-uploader.svelte";
   import StickersMultiCombobox from "$lib/components/stickers-multi-combobox.svelte";
   import { getConvexErrorMessage } from "$lib/convex-errors";
@@ -69,7 +68,6 @@
   let wantedStickerIds = $state<Sticker["_id"][]>(
     untrack(() => [...listing.wantedStickerIds]),
   );
-  let isSoldOut = $state(untrack(() => listing.status === "sold_out"));
   let submitError = $state("");
 
   const selectedCountry = $derived(
@@ -177,7 +175,6 @@
         imageKey,
         priceCents,
         quantityAvailable: quantity,
-        isSoldOut,
         tradeDescription:
           isForTrade && tradeDescription ? tradeDescription : undefined,
         wantedStickerIds: isForTrade ? wantedStickerIds : [],
@@ -424,19 +421,6 @@
       />
     </div>
   {/if}
-
-  <!-- Sold out toggle -->
-  <label
-    class="flex cursor-pointer items-center justify-between gap-3 rounded-xl bg-muted/50 px-3 py-2.5 select-none"
-  >
-    <div class="flex flex-col gap-0.5">
-      <span class="text-sm font-medium">{m.listing_mark_sold_out()}</span>
-      <span class="text-xs text-muted-foreground"
-        >{m.listing_hide_listing()}</span
-      >
-    </div>
-    <Switch size="sm" bind:checked={isSoldOut} disabled={submitting} />
-  </label>
 
   {#if submitError}
     <p class="text-sm text-destructive">{submitError}</p>

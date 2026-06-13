@@ -396,7 +396,6 @@ export const updateCurrentSellerListing = mutation({
     currency: v.optional(v.string()),
     imageKey: v.string(),
     intent: listingIntentValidator,
-    isSoldOut: v.boolean(),
     priceCents: v.optional(v.number()),
     quantityAvailable: v.number(),
     tradeDescription: v.optional(v.string()),
@@ -429,7 +428,7 @@ export const updateCurrentSellerListing = mutation({
       intent: preparedListing.intent,
       priceCents: preparedListing.priceCents,
       quantityAvailable: preparedListing.quantityAvailable,
-      status: args.isSoldOut ? "sold_out" : "active",
+      status: "active",
       tradeDescription: preparedListing.tradeDescription,
       updatedAt: Date.now(),
     });
