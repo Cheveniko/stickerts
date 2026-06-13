@@ -35,6 +35,9 @@ importers:
       convex-svelte:
         specifier: ^0.0.12
         version: 0.0.12(convex@1.39.1)(svelte@5.55.9(@typescript-eslint/types@8.59.4))
+      date-fns:
+        specifier: ^4.4.0
+        version: 4.4.0
       dinero.js:
         specifier: ^2.0.2
         version: 2.0.2
@@ -1358,6 +1361,9 @@ packages:
     resolution: {integrity: sha512-/Tb/JcjK111nNScGob5MNtsntNM1aCNUDipB/TkwZFhyDrrE47SOx/18wF2bbjgc3ZzCSKW1T5nt5EbFoAz/Vg==}
     engines: {node: '>=4'}
     hasBin: true
+
+  date-fns@4.4.0:
+    resolution: {integrity: sha512-+1UMbeh68lH1SegH83CGWwpb6OHHbpSgr3+s5Eww5M4CAgswBpoWS0AjTOfEJ33HiYKz1hdj/KTFprzXHmq/6w==}
 
   debug@4.4.3:
     resolution: {integrity: sha512-RGwwWnwQvkVfavKVt22FGLw+xYSdzARwm0ru6DhTVA3umU5hZc28V3kO4stgYryrTlLpuvgI9GiijltAjNbcqA==}
@@ -3577,6 +3583,8 @@ snapshots:
       which: 2.0.2
 
   cssesc@3.0.0: {}
+
+  date-fns@4.4.0: {}
 
   debug@4.4.3:
     dependencies:

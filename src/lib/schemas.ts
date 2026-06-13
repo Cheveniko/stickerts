@@ -147,6 +147,55 @@ export function createNewListingFormSchema() {
     }));
 }
 
+export function createRecordSaleFormSchema(
+  maxQuantity: number,
+  shouldRequireUnitPrice: boolean,
+) {
+  const unitPriceSchema = shouldRequireUnitPrice
+    ? createPriceSchema()
+    : createOptionalPriceSchema();
+
+  return z
+    .object({
+      quantity: createQuantitySchema(),
+      unitPrice: unitPriceSchema,
+    })
+    .superRefine((data, ctx) => {
+      if (data.quantity > maxQuantity) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["quantity"],
+          message: m.record_sale_quantity_exceeds_available(),
+        });
+      }
+
+      if (data.unitPrice === null || data.unitPrice === undefined) {
+        return;
+      }
+
+      const rawPriceCents = data.unitPrice * 100;
+      const roundedPriceCents = Math.round(rawPriceCents);
+
+      if (
+        Math.abs(rawPriceCents - roundedPriceCents) >
+        PRICE_DECIMAL_PRECISION_EPSILON
+      ) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["unitPrice"],
+          message: m.error_upload_price_decimals(),
+        });
+      }
+    })
+    .transform((data) => ({
+      quantity: data.quantity,
+      unitPriceCents:
+        data.unitPrice === null || data.unitPrice === undefined
+          ? undefined
+          : Math.round(data.unitPrice * 100),
+    }));
+}
+
 export const createSignedUploadResponseSchema = z.object({
   signedUrl: z.url(),
   imageKey: z.string().min(1),
@@ -155,4 +204,7 @@ export const createSignedUploadResponseSchema = z.object({
 export type NewListingFormData = z.output<ReturnType<typeof createNewListingFormSchema>>;
 export type CreateSignedUploadResponse = z.infer<
   typeof createSignedUploadResponseSchema
+>;
+export type RecordSaleFormData = z.output<
+  ReturnType<typeof createRecordSaleFormSchema>
 >;

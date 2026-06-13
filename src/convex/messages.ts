@@ -15,6 +15,10 @@ const messages = {
     error_sticker_not_found: "No encontramos el cromo seleccionado.",
     error_listing_not_found: "No encontramos la publicación seleccionada.",
     error_listing_removed: "Esta publicación ya no se puede editar.",
+    error_sale_listing_not_for_sale:
+      "Esta publicación no está disponible para registrar ventas.",
+    error_sale_quantity_unavailable:
+      "No puedes registrar más unidades de las disponibles.",
     error_invalid_currency: "La moneda debe ser un código ISO de 3 letras.",
     error_invalid_price: "El precio debe ser mayor a 0.",
     error_invalid_quantity: "La cantidad debe ser mayor a 0.",
@@ -115,6 +119,10 @@ const messages = {
     error_sticker_not_found: "We couldn't find the selected sticker.",
     error_listing_not_found: "We couldn't find the selected listing.",
     error_listing_removed: "This listing can no longer be edited.",
+    error_sale_listing_not_for_sale:
+      "This listing is not available for recording sales.",
+    error_sale_quantity_unavailable:
+      "You can't record more units than are available.",
     error_invalid_currency: "Currency must be a 3-letter ISO code.",
     error_invalid_price: "Price must be greater than 0.",
     error_invalid_quantity: "Quantity must be greater than 0.",

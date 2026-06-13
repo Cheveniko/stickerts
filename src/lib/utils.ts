@@ -1,5 +1,7 @@
 import { PUBLIC_S3_BASE_URL } from "$env/static/public";
 import { clsx, type ClassValue } from "clsx";
+import { formatDistanceToNow } from "date-fns";
+import { enUS, es } from "date-fns/locale";
 import { dinero, toDecimal } from "dinero.js";
 import * as dineroCurrencies from "dinero.js/currencies";
 import { twMerge } from "tailwind-merge";
@@ -75,6 +77,14 @@ export function getListingImageUrl(imageKey: string) {
 export function lockScroll(_node: HTMLElement) {
   document.body.classList.add("overflow-hidden");
   return () => document.body.classList.remove("overflow-hidden");
+}
+
+export function formatRelativeTime(timestamp: number, locale: string): string {
+  const dateFnsLocale = locale === "es" ? es : enUS;
+  return formatDistanceToNow(new Date(timestamp), {
+    addSuffix: true,
+    locale: dateFnsLocale,
+  });
 }
 
 export function closeOnEscapeHandler(

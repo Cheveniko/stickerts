@@ -2,7 +2,7 @@
   import { api } from "$convex/_generated/api";
   import type { ListingWithRelations } from "$convex/listings";
   import { getConvexErrorMessage } from "$lib/convex-errors";
-  import { closeOnEscapeHandler } from "$lib/utils";
+  import { closeOnEscapeHandler, lockScroll } from "$lib/utils";
   import { useConvexClient } from "convex-svelte";
   import { fade, fly } from "svelte/transition";
   import { cubicIn, cubicOut } from "svelte/easing";
@@ -206,6 +206,7 @@
     in:fade={{ duration: 180 }}
     out:fade={{ duration: 150 }}
     onclick={() => !isSending && close()}
+    {@attach lockScroll}
   ></div>
 {/if}
 

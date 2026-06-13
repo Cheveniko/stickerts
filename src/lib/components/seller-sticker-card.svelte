@@ -5,9 +5,11 @@
   import { getLocale } from "$lib/paraglide/runtime";
   import EditListingDrawer from "$lib/components/edit-listing-drawer.svelte";
   import DeleteListingDialog from "$lib/components/delete-listing-dialog.svelte";
+  import RecordSaleDialog from "$lib/components/record-sale-dialog.svelte";
   import PencilIcon from "@lucide/svelte/icons/pencil";
   import Trash2Icon from "@lucide/svelte/icons/trash-2";
   import ArrowLeftRightIcon from "@lucide/svelte/icons/arrow-left-right";
+  import ReceiptIcon from "@lucide/svelte/icons/receipt";
   import * as m from "$lib/paraglide/messages";
 
   type Props = {
@@ -18,6 +20,13 @@
 
   let editOpen = $state(false);
   let deleteOpen = $state(false);
+  let recordSaleOpen = $state(false);
+
+  const canRecordSale = $derived(
+    listing.intent !== "trade" &&
+      listing.status !== "removed" &&
+      listing.status !== "sold_out",
+  );
 
   const imageUrl = $derived(getListingImageUrl(listing.imageKey));
 
@@ -90,6 +99,26 @@
 
     <!-- Action buttons -->
     <div class="flex shrink-0 items-center gap-0.5">
+      {#if canRecordSale}
+        <Tooltip.Root>
+          <Tooltip.Trigger>
+            {#snippet child({ props })}
+              <button
+                {...props}
+                aria-label={m.record_sale_button_aria()}
+                onclick={() => (recordSaleOpen = true)}
+                class="flex size-8 items-center justify-center rounded-xl text-muted-foreground transition-[background-color,transform] duration-150 hover:bg-emerald-500/10 hover:text-emerald-600 active:scale-[0.96]"
+              >
+                <ReceiptIcon class="size-3.5" />
+              </button>
+            {/snippet}
+          </Tooltip.Trigger>
+          <Tooltip.Content sideOffset={6}
+            >{m.record_sale_button_aria()}</Tooltip.Content
+          >
+        </Tooltip.Root>
+      {/if}
+
       <Tooltip.Root>
         <Tooltip.Trigger>
           {#snippet child({ props })}
@@ -131,3 +160,4 @@
 
 <EditListingDrawer {listing} bind:open={editOpen} />
 <DeleteListingDialog {listing} bind:open={deleteOpen} />
+<RecordSaleDialog {listing} bind:open={recordSaleOpen} />

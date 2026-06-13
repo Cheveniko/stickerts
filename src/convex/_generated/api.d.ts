@@ -19,6 +19,7 @@ import type * as listings from "../listings.js";
 import type * as locationSeed from "../locationSeed.js";
 import type * as messages from "../messages.js";
 import type * as resend from "../resend.js";
+import type * as sales from "../sales.js";
 import type * as sellers from "../sellers.js";
 import type * as stickers from "../stickers.js";
 import type * as users from "../users.js";
@@ -41,6 +42,7 @@ declare const fullApi: ApiFromModules<{
   locationSeed: typeof locationSeed;
   messages: typeof messages;
   resend: typeof resend;
+  sales: typeof sales;
   sellers: typeof sellers;
   stickers: typeof stickers;
   users: typeof users;

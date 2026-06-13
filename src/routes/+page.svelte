@@ -6,6 +6,7 @@
   import Faq from "$lib/components/faq.svelte";
   import ListingsSkeleton from "$lib/components/skeletons/listings-skeleton.svelte";
   import ListingsGrid from "$lib/components/listings-grid.svelte";
+  import SalesGrid from "$lib/components/sales-grid.svelte";
   import { listingSearchParamsSchema } from "$lib/schemas";
 
   const listingsQuery = useQuery(
@@ -67,5 +68,7 @@
   {:else}
     <ListingsGrid listings={filteredListings} />
   {/if}
+
+  <SalesGrid />
   <Faq />
 </main>
