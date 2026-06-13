@@ -4,6 +4,7 @@
   import LanguageSwitcher from "$lib/components/language-switcher.svelte";
   import * as m from "$lib/paraglide/messages";
   import { localizeHref } from "$lib/paraglide/runtime";
+  import BrandLogo from "$lib/components/brand-logo.svelte";
 
   function cycleMode() {
     const current = userPrefersMode.current;
@@ -26,9 +27,9 @@
     class="container flex flex-wrap items-center gap-x-2 gap-y-2.5 py-3.5 sm:h-14 sm:flex-nowrap sm:justify-between sm:py-0"
   >
     <!-- Brand: always first, left -->
-    <a href={localizeHref("/")} class="order-1 shrink-0 text-sm font-bold"
-      >Stickerts</a
-    >
+    <a href={localizeHref("/")} class="order-1 shrink-0">
+      <BrandLogo class="h-5 sm:h-6" />
+    </a>
 
     <!-- Legal links: wraps to second row on mobile (order-3 + w-full), center on desktop -->
     <div

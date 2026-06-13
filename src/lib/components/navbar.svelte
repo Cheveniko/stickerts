@@ -10,6 +10,7 @@
   import SearchBar from "$lib/components/search-bar.svelte";
   import MobileSearchBar from "$lib/components/mobile-search-bar.svelte";
   import { page } from "$app/state";
+  import BrandLogo from "$lib/components/brand-logo.svelte";
 
   let loginOpen = $state(false);
   let settingsOpen = $state(false);
@@ -27,7 +28,9 @@
   <div
     class="container flex h-14 items-center justify-between gap-4 md:contents"
   >
-    <a href={localizeHref("/")} class="shrink-0 text-lg font-bold">Stickerts</a>
+    <a href={localizeHref("/")} class="shrink-0">
+      <BrandLogo class="h-5" />
+    </a>
 
     {#if isHomePage}
       <SearchBar />
