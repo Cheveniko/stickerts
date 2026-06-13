@@ -48,7 +48,7 @@
     <ListingsSkeleton />
   {:else if listingsQuery.error}
     <p>{m.home_error_generic()}</p>
-  {:else if listingsQuery.data?.length === 0}
+  {:else if listingsQuery.data.length === 0}
     {@render emptyState("listing")}
   {:else if filteredListings.length === 0}
     {@render emptyState("search")}
