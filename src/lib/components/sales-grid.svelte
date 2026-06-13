@@ -8,10 +8,8 @@
   const salesQuery = useQuery(api.sales.getRecentPublicSales, () => ({}));
 </script>
 
-<section>
-  <div class="mb-4 flex items-center gap-2">
-    <h2 class="text-xl font-semibold">{m.recent_sales_heading()}</h2>
-  </div>
+<section class="space-y-4">
+  <h2 class="text-xl font-semibold">{m.recent_sales_heading()}</h2>
   {#if salesQuery.isLoading}
     <SalesSkeleton />
   {:else if salesQuery.data && salesQuery.data.length > 0}

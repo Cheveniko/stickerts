@@ -219,7 +219,6 @@
   "delete_listing_confirm": "Delete",
   "record_sale_title": "Record sale",
   "record_sale_description_prefix": "Record a sale for",
-  "record_sale_description_suffix": "Update the quantity sold and the final unit price.",
   "record_sale_quantity_label": "Quantity sold",
   "record_sale_quantity_hint": "{max} available",
   "record_sale_quantity_exceeds_available": "The quantity sold can't be greater than the quantity available.",

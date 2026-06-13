@@ -219,7 +219,6 @@
   "delete_listing_confirm": "Eliminar",
   "record_sale_title": "Registrar venta",
   "record_sale_description_prefix": "Registra una venta de",
-  "record_sale_description_suffix": "Actualiza la cantidad vendida y el precio unitario final.",
   "record_sale_quantity_label": "Cantidad vendida",
   "record_sale_quantity_hint": "{max} disponibles",
   "record_sale_quantity_exceeds_available": "La cantidad vendida no puede ser mayor que la cantidad disponible.",

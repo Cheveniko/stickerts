@@ -158,7 +158,7 @@
           class="mr-1 inline-block size-5 rounded object-cover align-middle ring-1 ring-black/10 dark:ring-white/10"
         />
         {m.record_sale_description_prefix()}
-        {listing.sticker.label}. {m.record_sale_description_suffix()}
+        {listing.sticker.label}.
       </Dialog.Description>
     </Dialog.Header>
 
