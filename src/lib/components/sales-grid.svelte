@@ -13,7 +13,7 @@
   {#if salesQuery.isLoading}
     <SalesSkeleton />
   {:else if salesQuery.data && salesQuery.data.length > 0}
-    <div class="grid grid-cols-1 gap-2 md:grid-cols-4">
+    <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
       {#each salesQuery.data as sale, i (sale._id)}
         <div
           class="animate-in duration-300 fade-in-0 fill-mode-both slide-in-from-bottom-2"

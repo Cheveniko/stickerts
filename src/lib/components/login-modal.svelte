@@ -1,7 +1,7 @@
 <script lang="ts">
   import { page } from "$app/state";
   import { useAuth } from "$lib/hooks/useAuth.svelte";
-  import { closeOnEscapeHandler } from "$lib/utils";
+  import { closeOnEscapeHandler, lockScroll } from "$lib/utils";
   import { fade, fly } from "svelte/transition";
   import { cubicOut } from "svelte/easing";
   import { Input } from "$lib/components/ui/input/index.js";
@@ -89,6 +89,7 @@
   <div
     class="pointer-events-none fixed inset-0 z-50 flex items-center justify-center p-4"
     transition:fly={{ y: 14, duration: 280, easing: cubicOut }}
+    {@attach lockScroll}
   >
     <div
       role="dialog"
