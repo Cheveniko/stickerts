@@ -296,7 +296,7 @@
         </div>
 
         <!-- CTA -->
-        <div class="flex flex-col gap-2">
+        <div class="paypal flex flex-col gap-2">
           {#if checkoutState.kind !== "error"}
             <div
               class="min-h-[44px] rounded-2xl"
@@ -344,3 +344,9 @@
     </div>
   </div>
 {/if}
+
+<style>
+  .paypal {
+    color-scheme: none;
+  }
+</style>
