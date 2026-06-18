@@ -207,7 +207,7 @@
   "purchase_email_invalid": "Ingresa un email válido.",
   "purchase_phone_label": "Tu WhatsApp",
   "purchase_phone_placeholder": "0987654321",
-  "purchase_phone_help": "Escribe el número al que quieres que te contacten por WhatsApp.",
+  "purchase_phone_help": "Escribe el número al que quieres que te contacten.",
   "purchase_phone_invalid": "Ingresa un número de WhatsApp válido.",
   "purchase_safety_notice": "Asegúrate de coordinar la transacción en un lugar público.",
   "purchase_free_contact_notice": "Usarás tu contacto gratuito con vendedores.",

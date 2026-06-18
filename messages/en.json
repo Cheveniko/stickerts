@@ -207,7 +207,7 @@
   "purchase_email_invalid": "Enter a valid email address.",
   "purchase_phone_label": "Your WhatsApp",
   "purchase_phone_placeholder": "+1 555 123 4567",
-  "purchase_phone_help": "Enter the number where you'd like to be contacted on WhatsApp.",
+  "purchase_phone_help": "Enter the number where you'd like to be contacted.",
   "purchase_phone_invalid": "Enter a valid WhatsApp number.",
   "purchase_safety_notice": "Make sure to arrange the transaction in a public place.",
   "purchase_free_contact_notice": "You'll use your free seller contact.",
