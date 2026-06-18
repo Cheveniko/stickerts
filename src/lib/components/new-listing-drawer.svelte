@@ -6,18 +6,22 @@
   import { Button } from "$lib/components/ui/button/index.js";
   import { Switch } from "$lib/components/ui/switch/index.js";
   import NewListingForm from "$lib/components/new-listing-form.svelte";
+  import CollectorPassModal from "$lib/components/collector-pass-modal.svelte";
+  import LoginModal from "$lib/components/login-modal.svelte";
   import PlusIcon from "@lucide/svelte/icons/plus";
   import XIcon from "@lucide/svelte/icons/x";
-  import type { CurrentSeller } from "$convex/sellers";
+  import type { CurrentUserState } from "$lib/hooks/useCurrentUser.svelte";
   import * as m from "$lib/paraglide/messages";
 
   type Props = {
-    seller: CurrentSeller;
+    currentUser: CurrentUserState;
   };
 
-  const { seller }: Props = $props();
+  const { currentUser }: Props = $props();
 
   let open = $state(false);
+  let collectorPassOpen = $state(false);
+  let loginOpen = $state(false);
   let isSubmitting = $state(false);
   let publishMore = $state(false);
   let bottomOffset = $state(24);
@@ -33,14 +37,31 @@
     if (!publishMore) close();
   }
 
+  function handleFabClick() {
+    if (currentUser.status === "authenticated") {
+      if (currentUser.seller) {
+        open = true;
+        return;
+      }
+
+      collectorPassOpen = true;
+      return;
+    }
+
+    if (currentUser.status === "anonymous") {
+      loginOpen = true;
+    }
+  }
+
   onMount(() => {
     const footer = document.querySelector("footer");
     if (!footer) return;
 
     function updateOffset() {
+      const baseOffset = window.innerWidth < 640 ? 16 : 24;
       const rect = footer!.getBoundingClientRect();
       const footerVisible = Math.max(0, window.innerHeight - rect.top);
-      bottomOffset = footerVisible + 24;
+      bottomOffset = footerVisible + baseOffset;
     }
 
     window.addEventListener("scroll", updateOffset, { passive: true });
@@ -70,13 +91,13 @@
   aria-label={m.listing_publish_sticker()}
   class="fixed right-6 z-40 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-[transform,box-shadow,filter] duration-150 hover:scale-[1.04] hover:brightness-105 active:scale-[0.96]"
   style="bottom: {bottomOffset}px"
-  onclick={() => (open = true)}
+  onclick={handleFabClick}
 >
   <PlusIcon class="size-6" />
 </button>
 
 <!-- Backdrop -->
-{#if open}
+{#if open && currentUser.status === "authenticated" && currentUser.seller}
   <div
     role="presentation"
     class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
@@ -87,7 +108,7 @@
 {/if}
 
 <!-- Drawer Panel -->
-{#if open}
+{#if open && currentUser.status === "authenticated" && currentUser.seller}
   <div
     role="dialog"
     aria-modal="true"
@@ -119,7 +140,7 @@
     <div class="flex-1 overflow-y-auto px-6 py-6">
       <NewListingForm
         id="new-listing-form"
-        {seller}
+        seller={currentUser.seller}
         bind:submitting={isSubmitting}
         onSuccess={onFormSuccess}
       />
@@ -155,3 +176,6 @@
     </div>
   </div>
 {/if}
+
+<CollectorPassModal bind:open={collectorPassOpen} />
+<LoginModal bind:open={loginOpen} />
