@@ -435,7 +435,13 @@ export const upsertPendingPurchaseInternal = internalMutation({
       return existingPurchase._id;
     }
 
-    return await ctx.db.insert("collectorPassPurchases", args);
+    return await ctx.db.insert("collectorPassPurchases", {
+      userId: args.userId,
+      paypalOrderId: args.paypalOrderId,
+      amountCents: args.amountCents,
+      currency: args.currency,
+      createdAt: args.createdAt,
+    });
   },
 });
 
