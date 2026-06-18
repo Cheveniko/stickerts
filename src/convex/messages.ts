@@ -94,8 +94,8 @@ const messages = {
       "No encontramos una compra pendiente para este usuario.",
     collector_pass_order_description: "Pase de Coleccionista Stickerts 2026",
     email_login_subject: "Tu acceso a Stickerts",
-    email_login_text: "Entra a Stickerts con este link:\n\n{url}\n",
-    email_login_html_intro: "Entra a Stickerts con este link:",
+    email_login_text: "Inicia sesión en Stickerts con este link:\n\n{url}\n",
+    email_login_html_intro: "Inicia sesión en Stickerts con este link:",
     email_contact_subject: "Nuevo interesado en tu cromo {stickerName}",
     email_contact_greeting: "Hola {sellerName},",
     email_contact_intro:
